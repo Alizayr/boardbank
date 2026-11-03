@@ -140,6 +140,7 @@ body:not(.insess) .sbar{left:270px}
 .cell.fl::after{content:"";position:absolute;top:-1px;right:-1px;border:6px solid transparent;border-top-color:var(--amber);border-right-color:var(--amber)}
 .slay{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
 .qcard{background:#fff;border:1px solid var(--line);border-radius:30px;padding:36px 38px}
+.qimg{display:block;max-width:100%;height:auto;margin:14px 0;border:1px solid var(--line);border-radius:14px;background:#fff}
 .vig{font-size:18px;color:#4a4a4a;white-space:pre-wrap;margin-bottom:18px;line-height:1.65}
 .qq{font-size:19px;font-weight:700;white-space:pre-wrap;margin-bottom:28px;line-height:1.5}
 .opt{display:flex;align-items:center;gap:16px;border:1px solid var(--line);background:#f9f9f9;border-radius:30px;padding:20px 26px;margin-bottom:14px;cursor:pointer;font-size:17px;font-weight:500}
@@ -277,6 +278,12 @@ textarea.in{resize:vertical}
 <script>
 /* ================= helpers ================= */
 const $ = s => document.querySelector(s);
+/* images live inside question/explanation text as [[img:data:image/webp;base64,...]] (or a URL / relative path) */
+const IMG_RE = /\[\[img:([^\]\s]+)\]\]/g;
+const IMG_OK = /^(data:image\/[a-z+.-]+;base64,[A-Za-z0-9+\/=]+|https?:\/\/[^\s"'<>]+|[\w.\/-]+)$/i;
+const noImg = s => String(s ?? '').replace(IMG_RE, '').trim();
+const plain = s => String(s ?? '').replace(IMG_RE, ' [image] ').replace(/\s+/g, ' ').trim();
+const imgHtml = s => [...String(s ?? '').matchAll(IMG_RE)].map(m => m[1]).filter(u => IMG_OK.test(u)).map(u => `<img class="qimg" src="${u.replace(/"/g, '&quot;')}" alt="Question image" loading="lazy">`).join('');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
 const LETTERS = 'ABCDEFGH';
@@ -438,7 +445,7 @@ function fmtIv(days) {
   return Math.round(days / 365 * 10) / 10 + ' years';
 }
 function splitStem(s) {
-  s = s.trim(); const paras = s.split(/\n\s*\n/);
+  s = noImg(s); const paras = s.split(/\n\s*\n/);
   if (paras.length > 1) return { v: paras.slice(0, -1).join('\n\n'), q: paras[paras.length - 1] };
   const m = s.match(/^([\s\S]*?[.!:]\s+)([^.!:]*\?)\s*$/);
   return m ? { v: m[1].trim(), q: m[2].trim() } : { v: '', q: s };
@@ -674,8 +681,8 @@ function renderSession() {
     const verdict = chosen === undefined ? 'Not answered' : ok ? 'Correct' : 'Incorrect';
     after = `<section class="kf"><h3>${ic('link', 26)}<span dir="auto">${esc(topic)}</span></h3>
       <p class="muted sm" style="margin:-6px 0 10px">${verdict}. The correct answer is ${LETTERS[q.correct]}.</p>
-      <div class="${open ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(q.explanation)}</div>` : ''}</div>
-      ${(q.objective || '').length + (q.explanation || '').length > 300 ? `<button class="more" data-act="kf">${open ? 'See less' : 'See more'} ${ic('down', 18)}</button>` : ''}</section>
+      <div class="${open ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(noImg(q.explanation))}${imgHtml(q.explanation)}</div>` : ''}</div>
+      ${(q.objective || '').length + noImg(q.explanation).length > 300 ? `<button class="more" data-act="kf">${open ? 'See less' : 'See more'} ${ic('down', 18)}</button>` : ''}</section>
       <section class="rate" aria-live="polite"><h3>${ok ? 'How hard was this question?' : 'Scheduled to repeat'}</h3>
       ${ok ? `<p class="muted sm">This decides when you will see it again. If you skip, Medium is used. Shortcuts: 1, 2, 3.</p>
         <div class="rbtns">${[['hard', 'Hard'], ['medium', 'Medium'], ['easy', 'Easy']].map(([k, l]) => `<button class="rb ${k} ${r === k ? 'on' : ''}" data-act="rate" data-r="${k}"><b>${l}</b><span>${fmtIv(iv[k])}</span></button>`).join('')}</div>`
@@ -698,7 +705,7 @@ function renderSession() {
     <button class="ghost" data-act="end">${ic('close', 18)} ${sess.review ? 'Close review' : 'End session'}</button></div>
   <div class="slay"><div>
     <section class="qcard">${sess.hint[q.id] && q.hint ? `<div class="hint"><b>Hint.</b> <span dir="auto">${esc(q.hint)}</span></div>` : ''}
-      ${v ? `<p class="vig" dir="auto">${esc(v)}</p>` : ''}<p class="qq" dir="auto">${esc(qq)}</p>
+      ${v ? `<p class="vig" dir="auto">${esc(v)}</p>` : ''}<p class="qq" dir="auto">${esc(qq)}</p>${imgHtml(q.stem)}
       <div role="radiogroup" aria-label="Answer choices">${opts.join ? opts.join('') : opts}</div>
       ${canSubmit || (!rev && sess.mode === 'tutor') ? `<button class="submit" data-act="submit" ${canSubmit ? '' : 'disabled'}>Submit answer</button>` : ''}
     </section>${after}${nextBtn}</div>
@@ -769,7 +776,7 @@ function renderResults() {
   const rows = sess.ids.map((id, i) => {
     const q = byId(id), a = sess.ans[id];
     const st = a === undefined ? '<span class="pill na">Skipped</span>' : a === q.correct ? '<span class="pill ok">Correct</span>' : '<span class="pill no">Incorrect</span>';
-    return `<tr><td>${i + 1}</td><td dir="auto">${esc(q.stem.length > 100 ? q.stem.slice(0, 100) + '…' : q.stem)}</td><td>${st}</td><td><button class="ghost" data-act="reviewq" data-i="${i}">Review</button></td></tr>`;
+    return `<tr><td>${i + 1}</td><td dir="auto">${esc(plain(q.stem).length > 100 ? plain(q.stem).slice(0, 100) + '…' : plain(q.stem))}</td><td>${st}</td><td><button class="ghost" data-act="reviewq" data-i="${i}">Review</button></td></tr>`;
   }).join('');
   return `<div class="crumb"><a data-act="home">Home</a><span class="sep">/</span><b>Session complete</b></div>
   <section class="card"><div class="row" style="gap:36px"><div><div class="score100">${pct}%</div><div class="muted">${sess.correct} of ${t} correct</div></div>
@@ -800,9 +807,9 @@ function renderManage() {
 function renderBankList() {
   const el = $('#banklist'); if (!el) return;
   const q = bankQuery.trim().toLowerCase();
-  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || x.stem.toLowerCase().includes(q) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
+  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || plain(x.stem).toLowerCase().includes(q) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
   el.innerHTML = list.length ? list.map(x => { const r = state.results[x.id], e = examById(x.exam);
-    return `<div class="qrow"><div class="s" dir="auto"><div>${esc(x.stem.length > 150 ? x.stem.slice(0, 150) + '…' : x.stem)}</div>
+    return `<div class="qrow"><div class="s" dir="auto"><div>${esc(plain(x.stem).length > 150 ? plain(x.stem).slice(0, 150) + '…' : plain(x.stem))}</div>
       <div style="margin-top:6px"><span class="chip" style="background:#e9f0fd">${esc(e ? e.name : '')}</span>${(x.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}<span class="muted sm">${x.options.length} choices${r && r.attempts ? ' · ' + r.correct + '/' + r.attempts + ' correct' : ''}</span></div></div>
       <div class="row" style="align-items:flex-start"><button class="ghost" data-act="editq" data-id="${x.id}">Edit</button><button class="ghost danger" data-act="delq" data-id="${x.id}">Delete</button></div></div>`; }).join('')
     : `<div class="empty">${state.bank.length ? 'No questions match your search.' : 'No questions yet. Select Add question to create one.'}</div>`;
