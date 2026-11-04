@@ -321,7 +321,7 @@ const ic = (n, s = 20) => `<svg class="ic" width="${s}" height="${s}" viewBox="0
 
 let state = { bank: [], results: {}, history: [], exams: [], cards: {}, marks: {}, notes: {}, daily: {}, name: 'Ali' };
 let view = 'home', curExam = null, sess = null, timerId = null, editing = null;
-let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', manageExam = 'all', bankQuery = '', persistWorks = true;
+let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', manageExam = 'all', bankQuery = '', bankLimit = 50, bankTimer = null, persistWorks = true;
 
 /* ================= storage (Supabase) ================= */
 const sb = window.supabase.createClient('https://vlrgorcmrlugvipsvdjs.supabase.co', 'sb_publishable_4mQXmAzgM-RF69GHY2d9VA_MKLpzccT');
@@ -330,6 +330,11 @@ const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'name', 'n
 const eRow = e => ({ id: e.id, name: e.name, pass_mark: e.passMark });
 const qRow = q => ({ id: q.id, exam_id: q.exam, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation || '', objective: q.objective || '', hint: q.hint || '', tags: q.tags || [], difficulty: q.difficulty || 'Medium' });
 const mapSnap = (rows) => new Map(rows.map(r => [r.id, JSON.stringify(r)]));
+/* questions are compared by a short hash cached per object, so a save never re-serialises thousands of rows (and their images) again */
+const hash53 = (str) => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); return 4294967296 * (2097151 & h2) + (h1 >>> 0); };
+const qSigs = new WeakMap();
+const qSig = q => { let v = qSigs.get(q); if (v === undefined) { v = hash53(JSON.stringify(qRow(q))); qSigs.set(q, v); } return v; };
+const qSnap = () => new Map(state.bank.map(q => [q.id, qSig(q)]));
 async function loadData() {
   try {
     const [ex, us, ad] = await Promise.all([
@@ -337,31 +342,39 @@ async function loadData() {
       sb.from('user_state').select('data').eq('user_id', me.id).maybeSingle(),
       sb.from('admins').select('user_id').maybeSingle()]);
     if (ex.error) throw ex.error;
-    let qs = [], from = 0;
-    for (;;) {
-      const r = await sb.from('questions').select('*').order('created_at').range(from, from + 999);
-      if (r.error) throw r.error; qs = qs.concat(r.data); if (r.data.length < 1000) break; from += 1000;
-    }
+    let qs = [];
+    const PAGE = 1000, page = (i) => sb.from('questions').select('*').order('created_at').range(i * PAGE, i * PAGE + PAGE - 1);
+    const sequential = async () => { const out = []; for (let i = 0; ; i++) { const r = await page(i); if (r.error) throw r.error; out.push(...r.data); if (r.data.length < PAGE) break; } return out; };
+    try {
+      const cnt = await sb.from('questions').select('id', { count: 'exact', head: true });
+      if (cnt.error || cnt.count == null) throw cnt.error || new Error('no count');
+      const pages = Math.ceil(cnt.count / PAGE), parts = new Array(pages); let next = 0;
+      const worker = async () => { for (;;) { const i = next++; if (i >= pages) return; const r = await page(i); if (r.error) throw r.error; parts[i] = r.data; } };
+      await Promise.all([worker(), worker(), worker(), worker()]);
+      const seen = new Set(); qs = parts.flat().filter(r => !seen.has(r.id) && seen.add(r.id));
+      if (qs.length !== cnt.count) qs = await sequential();      // paging was unstable: fall back to the slow, safe way
+    } catch (e) { console.warn('parallel load failed, using sequential', e); qs = await sequential(); }
     isAdmin = !!ad.data;
     state.exams = ex.data.map(e => ({ id: e.id, name: e.name, passMark: e.pass_mark }));
     state.bank = qs.map(q => ({ id: q.id, exam: q.exam_id, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation, objective: q.objective, hint: q.hint, tags: q.tags || [], difficulty: q.difficulty }));
     const saved = (us.data && us.data.data) || {}, dflt = (me.email || 'Doctor').split('@')[0];
     Object.assign(state, saved);
     if (!saved.name || saved.name === dflt) state.name = (me.user_metadata && me.user_metadata.name) || dflt;
-    synced = { e: mapSnap(state.exams.map(eRow)), q: mapSnap(state.bank.map(qRow)) };
+    synced = { e: mapSnap(state.exams.map(eRow)), q: isAdmin ? qSnap() : new Map() };
     loaded = true; return true;
   } catch (e) { console.error(e); toast('Could not load data from the server'); return false; }
 }
 async function syncContent() {
-  const ce = state.exams.map(eRow), cq = state.bank.map(qRow);
-  const ids = new Set(ce.map(r => r.id)), qids = new Set(cq.map(r => r.id));
-  const ue = ce.filter(r => synced.e.get(r.id) !== JSON.stringify(r)), uq = cq.filter(r => synced.q.get(r.id) !== JSON.stringify(r));
+  const ce = state.exams.map(eRow), uq = [], qids = new Set();
+  for (const q of state.bank) { qids.add(q.id); if (synced.q.get(q.id) !== qSig(q)) uq.push(qRow(q)); }
+  const ids = new Set(ce.map(r => r.id));
+  const ue = ce.filter(r => synced.e.get(r.id) !== JSON.stringify(r));
   const de = [...synced.e.keys()].filter(id => !ids.has(id)), dq = [...synced.q.keys()].filter(id => !qids.has(id));
   if (ue.length) { const r = await sb.from('exams').upsert(ue); if (r.error) throw r.error; }
   for (let i = 0; i < uq.length; i += 100) { const r = await sb.from('questions').upsert(uq.slice(i, i + 100)); if (r.error) throw r.error; }
   for (let i = 0; i < dq.length; i += 100) { const r = await sb.from('questions').delete().in('id', dq.slice(i, i + 100)); if (r.error) throw r.error; }
   if (de.length) { const r = await sb.from('exams').delete().in('id', de); if (r.error) throw r.error; }
-  synced = { e: mapSnap(ce), q: mapSnap(cq) };
+  synced = { e: mapSnap(ce), q: qSnap() };
 }
 async function doSave() {
   if (!me || !loaded) return;
@@ -809,14 +822,17 @@ function renderManage() {
       <div style="margin-top:26px"><button class="ghost danger" data-act="reset">Reset all results and review schedule</button></div></section>`;
   return `<h1 class="title" style="margin-bottom:6px">Manage</h1>${tabs}${body}`;
 }
+const stemCache = new WeakMap();
+const stemLC = q => { let v = stemCache.get(q); if (v === undefined) { v = plain(q.stem).toLowerCase(); stemCache.set(q, v); } return v; };
 function renderBankList() {
   const el = $('#banklist'); if (!el) return;
   const q = bankQuery.trim().toLowerCase();
-  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || plain(x.stem).toLowerCase().includes(q) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
-  el.innerHTML = list.length ? list.map(x => { const r = state.results[x.id], e = examById(x.exam);
+  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || stemLC(x).includes(q) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
+  const shown = list.slice(0, bankLimit);
+  el.innerHTML = list.length ? shown.map(x => { const r = state.results[x.id], e = examById(x.exam);
     return `<div class="qrow"><div class="s" dir="auto"><div>${esc(plain(x.stem).length > 150 ? plain(x.stem).slice(0, 150) + '…' : plain(x.stem))}</div>
       <div style="margin-top:6px"><span class="chip" style="background:var(--acc-soft);color:var(--acc)">${esc(e ? e.name : '')}</span>${(x.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}<span class="muted sm">${x.options.length} choices${r && r.attempts ? ' · ' + r.correct + '/' + r.attempts + ' correct' : ''}</span></div></div>
-      <div class="row" style="align-items:flex-start"><button class="ghost" data-act="editq" data-id="${x.id}">Edit</button><button class="ghost danger" data-act="delq" data-id="${x.id}">Delete</button></div></div>`; }).join('')
+      <div class="row" style="align-items:flex-start"><button class="ghost" data-act="editq" data-id="${x.id}">Edit</button><button class="ghost danger" data-act="delq" data-id="${x.id}">Delete</button></div></div>`; }).join('') + (list.length > shown.length ? `<div style="text-align:center;margin:16px 0"><button class="ghost" data-act="morebank">Show more (${list.length - shown.length} left)</button></div>` : '')
     : `<div class="empty">${state.bank.length ? 'No questions match your search.' : 'No questions yet. Select Add question to create one.'}</div>`;
 }
 function renderEditor() {
@@ -977,6 +993,7 @@ document.addEventListener('click', async e => {
     case 'mtab': editing = null; manageTab = t.dataset.k; render(); break;
     case 'newq': editing = blankDraft(); view = 'manage'; manageTab = 'questions'; render(); break;
     case 'editq': editing = JSON.parse(JSON.stringify(byId(t.dataset.id))); editing.hint = editing.hint || ''; render(); break;
+    case 'morebank': bankLimit += 100; renderBankList(); break;
     case 'delq': if (await ask('Delete this question? This cannot be undone.', 'Delete')) {
       state.bank = state.bank.filter(q => q.id !== t.dataset.id); delete state.results[t.dataset.id]; delete state.cards[t.dataset.id]; delete state.notes[t.dataset.id]; delete state.marks[t.dataset.id];
       saveData(); render(); } break;
@@ -999,7 +1016,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('input', e => {
   const id = e.target.id;
-  if (id === 'bq') { bankQuery = e.target.value; renderBankList(); }
+  if (id === 'bq') { bankQuery = e.target.value; bankLimit = 50; clearTimeout(bankTimer); bankTimer = setTimeout(renderBankList, 150); }
   else if (id === 's-count') setup.count = e.target.value;
   else if (id === 's-h') setup.h = e.target.value;
   else if (id === 's-m') setup.m = e.target.value;
@@ -1008,7 +1025,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const id = e.target.id;
   if (id === 's-filter') { setup.filter = e.target.value; render(); }
-  else if (id === 'mexam') { manageExam = e.target.value; render(); }
+  else if (id === 'mexam') { manageExam = e.target.value; bankLimit = 50; render(); }
   else if (id === 'nm') { state.name = e.target.value.trim() || 'Doctor'; saveData(); renderSide(); }
   else if (id === 'file' && e.target.files[0]) { handleFile(e.target.files[0]); e.target.value = ''; }
   else if (e.target.classList.contains('ex-name')) {
