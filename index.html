@@ -325,7 +325,7 @@ let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', man
 
 /* ================= storage (Supabase) ================= */
 const sb = window.supabase.createClient('https://vlrgorcmrlugvipsvdjs.supabase.co', 'sb_publishable_4mQXmAzgM-RF69GHY2d9VA_MKLpzccT');
-let me = null, isAdmin = false, loaded = false, synced = { e: new Map(), q: new Map() };
+let loadErr = '', me = null, isAdmin = false, loaded = false, synced = { e: new Map(), q: new Map() };
 const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'name', 'named'];
 const eRow = e => ({ id: e.id, name: e.name, pass_mark: e.passMark });
 const qRow = q => ({ id: q.id, exam_id: q.exam, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation || '', objective: q.objective || '', hint: q.hint || '', tags: q.tags || [], difficulty: q.difficulty || 'Medium' });
@@ -343,14 +343,14 @@ async function loadData() {
       sb.from('admins').select('user_id').maybeSingle()]);
     if (ex.error) throw ex.error;
     let qs = [];
-    const PAGE = 1000, page = (i) => sb.from('questions').select('*').order('created_at').range(i * PAGE, i * PAGE + PAGE - 1);
+    const PAGE = 200, page = async (i) => { for (let a = 0; ; a++) { const r = await sb.from('questions').select('*').order('created_at').range(i * PAGE, i * PAGE + PAGE - 1); if (!r.error || a >= 2) return r; await new Promise(res => setTimeout(res, 700 * (a + 1))); } };
     const sequential = async () => { const out = []; for (let i = 0; ; i++) { const r = await page(i); if (r.error) throw r.error; out.push(...r.data); if (r.data.length < PAGE) break; } return out; };
     try {
       const cnt = await sb.from('questions').select('id', { count: 'exact', head: true });
       if (cnt.error || cnt.count == null) throw cnt.error || new Error('no count');
       const pages = Math.ceil(cnt.count / PAGE), parts = new Array(pages); let next = 0;
       const worker = async () => { for (;;) { const i = next++; if (i >= pages) return; const r = await page(i); if (r.error) throw r.error; parts[i] = r.data; } };
-      await Promise.all([worker(), worker(), worker(), worker()]);
+      await Promise.all([worker(), worker(), worker()]);
       const seen = new Set(); qs = parts.flat().filter(r => !seen.has(r.id) && seen.add(r.id));
       if (qs.length !== cnt.count) qs = await sequential();      // paging was unstable: fall back to the slow, safe way
     } catch (e) { console.warn('parallel load failed, using sequential', e); qs = await sequential(); }
@@ -362,7 +362,7 @@ async function loadData() {
     if (!saved.name || saved.name === dflt) state.name = (me.user_metadata && me.user_metadata.name) || dflt;
     synced = { e: mapSnap(state.exams.map(eRow)), q: isAdmin ? qSnap() : new Map() };
     loaded = true; return true;
-  } catch (e) { console.error(e); toast('Could not load data from the server'); return false; }
+  } catch (e) { console.error(e); loadErr = (e && (e.message || e.code || e.details)) || String(e); toast('Could not load data from the server'); return false; }
 }
 async function syncContent() {
   const ce = state.exams.map(eRow), uq = [], qids = new Set();
@@ -1054,7 +1054,7 @@ document.addEventListener('keydown', e => {
 async function start(session) {
   me = session.user;
   const ok = await loadData(); migrate();
-  if (!ok) { $('#au-m').textContent = 'Could not load your data. Reload to try again.'; return; }
+  if (!ok) { $('#au-m').textContent = 'Could not load your data' + (loadErr ? ' (' + loadErr + ')' : '') + '. Reload to try again.'; return; }
   $('#auth').hidden = true; curExam = state.exams[0].id; view = 'home';
   if (!state.named) {
     const m = me.user_metadata && me.user_metadata.name;
