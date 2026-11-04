@@ -681,12 +681,13 @@ function renderSession() {
   if (rev && !hideScore) {
     const topic = qTags(q)[0] === 'Untagged' ? (examById(q.exam) || {}).name : qTags(q)[0];
     const open = !!sess.kf[q.id];
+    const kfLong = (q.objective || '').length + noImg(q.explanation).length > 300 || /\[\[img:/.test(q.explanation || '') || String(q.explanation || '').split('\n').length > 6;
     const c0 = sess.prev[q.id] || getCard(q.id), iv = previewIntervals(c0), r = sess.rated[q.id];
     const verdict = chosen === undefined ? 'Not answered' : ok ? 'Correct' : 'Incorrect';
     after = `<section class="kf"><h3>${ic('link', 26)}<span dir="auto">${esc(topic)}</span></h3>
       <p class="muted sm" style="margin:-6px 0 10px">${verdict}. The correct answer is ${LETTERS[q.correct]}.</p>
-      <div class="${open ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(noImg(q.explanation))}${imgHtml(q.explanation)}</div>` : ''}</div>
-      ${(q.objective || '').length + noImg(q.explanation).length > 300 ? `<button class="more" data-act="kf">${open ? 'See less' : 'See more'} ${ic('down', 18)}</button>` : ''}</section>
+      <div class="${open || !kfLong ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(noImg(q.explanation))}${imgHtml(q.explanation)}</div>` : ''}</div>
+      ${kfLong ? `<button class="more" data-act="kf">${open ? 'See less' : 'See more'} ${ic('down', 18)}</button>` : ''}</section>
       <section class="rate" aria-live="polite"><h3>${ok ? 'How hard was this question?' : 'Scheduled to repeat'}</h3>
       ${ok ? `<p class="muted sm">This decides when you will see it again. If you skip, Medium is used. Shortcuts: 1, 2, 3.</p>
         <div class="rbtns">${[['hard', 'Hard'], ['medium', 'Medium'], ['easy', 'Easy']].map(([k, l]) => `<button class="rb ${k} ${r === k ? 'on' : ''}" data-act="rate" data-r="${k}"><b>${l}</b><span>${fmtIv(iv[k])}</span></button>`).join('')}</div>`
