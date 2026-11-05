@@ -325,6 +325,7 @@ let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', man
 
 /* ================= storage (Supabase) ================= */
 const sb = window.supabase.createClient('https://vlrgorcmrlugvipsvdjs.supabase.co', 'sb_publishable_4mQXmAzgM-RF69GHY2d9VA_MKLpzccT');
+const orphanDel = new Set(); let hydrateBusy = false;
 let loadErr = '', me = null, isAdmin = false, loaded = false, synced = { e: new Map(), q: new Map() };
 const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'name', 'named'];
 const eRow = e => ({ id: e.id, name: e.name, pass_mark: e.passMark });
@@ -334,7 +335,51 @@ const mapSnap = (rows) => new Map(rows.map(r => [r.id, JSON.stringify(r)]));
 const hash53 = (str) => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); return 4294967296 * (2097151 & h2) + (h1 >>> 0); };
 const qSigs = new WeakMap();
 const qSig = q => { let v = qSigs.get(q); if (v === undefined) { v = hash53(JSON.stringify(qRow(q))); qSigs.set(q, v); } return v; };
-const qSnap = () => new Map(state.bank.map(q => [q.id, qSig(q)]));
+const qSnap = () => new Map(state.bank.filter(q => !q.stub).map(q => [q.id, qSig(q)]));
+/* ---- light loading: at sign-in only id / exam / tags are fetched; the full text of a question is fetched when it is needed ---- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const retry = async (fn, tries = 3) => { for (let a = 0; ; a++) { const r = await fn(); if (!r.error || a >= tries - 1) return r; await sleep(700 * (a + 1)); } };
+const mapQ = q => ({ id: q.id, exam: q.exam_id, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation, objective: q.objective, hint: q.hint, tags: q.tags || [], difficulty: q.difficulty });
+const stubQ = q => ({ id: q.id, exam: q.exam_id, stem: '', options: [], correct: 0, explanation: '', objective: '', hint: '', tags: q.tags || [], difficulty: q.difficulty, stub: true });
+async function countQ(examId) {
+  const r = await retry(() => { let b = sb.from('questions').select('id', { count: 'exact', head: true }); return examId ? b.eq('exam_id', examId) : b; });
+  if (r.error) throw r.error; return r.count;
+}
+async function fetchAll(build, PAGE, total, workers = 4) {
+  const page = i => retry(() => build().order('created_at').range(i * PAGE, i * PAGE + PAGE - 1));
+  const sequential = async () => { const out = []; for (let i = 0; ; i++) { const r = await page(i); if (r.error) throw r.error; out.push(...r.data); if (r.data.length < PAGE) break; } return out; };
+  if (total == null) return sequential();
+  if (total === 0) return [];
+  try {
+    const pages = Math.ceil(total / PAGE), parts = new Array(pages); let next = 0;
+    const worker = async () => { for (;;) { const i = next++; if (i >= pages) return; const r = await page(i); if (r.error) throw r.error; parts[i] = r.data; } };
+    await Promise.all(Array.from({ length: Math.min(workers, pages) }, worker));
+    const seen = new Set(), rows = parts.flat().filter(r => !seen.has(r.id) && seen.add(r.id));
+    return rows.length === total ? rows : await sequential();      // paging was unstable: use the slow, safe way
+  } catch (e) { console.warn('parallel load failed, using sequential', e); return sequential(); }
+}
+function mergeRow(idx, row) {
+  const full = mapQ(row); let q = idx.get(row.id);
+  if (q) { Object.assign(q, full); delete q.stub; } else { q = full; state.bank.push(q); idx.set(q.id, q); }
+  if (isAdmin) synced.q.set(q.id, qSig(q));
+}
+const hydrating = {};
+function hydrateExam(examId) {
+  if (!state.bank.some(q => q.exam === examId && q.stub)) return Promise.resolve();
+  return hydrating[examId] || (hydrating[examId] = (async () => {
+    const total = await countQ(examId);
+    const rows = await fetchAll(() => sb.from('questions').select('*').eq('exam_id', examId), 200, total, 4);
+    const idx = new Map(state.bank.map(q => [q.id, q])); rows.forEach(r => mergeRow(idx, r));
+  })().finally(() => { delete hydrating[examId]; }));
+}
+const hydrateAll = () => Promise.all(state.exams.map(e => hydrateExam(e.id)));
+async function hydrateIds(ids, idx) {
+  if (ids.length > 300) { await Promise.all([...new Set(ids.map(id => idx.get(id).exam))].map(hydrateExam)); return; }
+  const chunks = []; for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+  let n = 0;
+  const worker = async () => { for (;;) { const c = chunks[n++]; if (!c) return; const r = await retry(() => sb.from('questions').select('*').in('id', c)); if (r.error) throw r.error; r.data.forEach(row => mergeRow(idx, row)); } };
+  await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker));
+}
 async function loadData() {
   try {
     const [ex, us, ad] = await Promise.all([
@@ -342,21 +387,10 @@ async function loadData() {
       sb.from('user_state').select('data').eq('user_id', me.id).maybeSingle(),
       sb.from('admins').select('user_id').maybeSingle()]);
     if (ex.error) throw ex.error;
-    let qs = [];
-    const PAGE = 200, page = async (i) => { for (let a = 0; ; a++) { const r = await sb.from('questions').select('*').order('created_at').range(i * PAGE, i * PAGE + PAGE - 1); if (!r.error || a >= 2) return r; await new Promise(res => setTimeout(res, 700 * (a + 1))); } };
-    const sequential = async () => { const out = []; for (let i = 0; ; i++) { const r = await page(i); if (r.error) throw r.error; out.push(...r.data); if (r.data.length < PAGE) break; } return out; };
-    try {
-      const cnt = await sb.from('questions').select('id', { count: 'exact', head: true });
-      if (cnt.error || cnt.count == null) throw cnt.error || new Error('no count');
-      const pages = Math.ceil(cnt.count / PAGE), parts = new Array(pages); let next = 0;
-      const worker = async () => { for (;;) { const i = next++; if (i >= pages) return; const r = await page(i); if (r.error) throw r.error; parts[i] = r.data; } };
-      await Promise.all([worker(), worker(), worker()]);
-      const seen = new Set(); qs = parts.flat().filter(r => !seen.has(r.id) && seen.add(r.id));
-      if (qs.length !== cnt.count) qs = await sequential();      // paging was unstable: fall back to the slow, safe way
-    } catch (e) { console.warn('parallel load failed, using sequential', e); qs = await sequential(); }
+    const rows = await fetchAll(() => sb.from('questions').select('id,exam_id,tags,difficulty'), 1000, await countQ(), 4);
     isAdmin = !!ad.data;
     state.exams = ex.data.map(e => ({ id: e.id, name: e.name, passMark: e.pass_mark }));
-    state.bank = qs.map(q => ({ id: q.id, exam: q.exam_id, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation, objective: q.objective, hint: q.hint, tags: q.tags || [], difficulty: q.difficulty }));
+    state.bank = rows.map(stubQ);
     const saved = (us.data && us.data.data) || {}, dflt = (me.email || 'Doctor').split('@')[0];
     Object.assign(state, saved);
     if (!saved.name || saved.name === dflt) state.name = (me.user_metadata && me.user_metadata.name) || dflt;
@@ -366,14 +400,15 @@ async function loadData() {
 }
 async function syncContent() {
   const ce = state.exams.map(eRow), uq = [], qids = new Set();
-  for (const q of state.bank) { qids.add(q.id); if (synced.q.get(q.id) !== qSig(q)) uq.push(qRow(q)); }
+  for (const q of state.bank) { qids.add(q.id); if (q.stub) continue; if (synced.q.get(q.id) !== qSig(q)) uq.push(qRow(q)); }
   const ids = new Set(ce.map(r => r.id));
   const ue = ce.filter(r => synced.e.get(r.id) !== JSON.stringify(r));
-  const de = [...synced.e.keys()].filter(id => !ids.has(id)), dq = [...synced.q.keys()].filter(id => !qids.has(id));
+  const de = [...synced.e.keys()].filter(id => !ids.has(id)), dq = [...synced.q.keys()].filter(id => !qids.has(id)).concat([...orphanDel]);
   if (ue.length) { const r = await sb.from('exams').upsert(ue); if (r.error) throw r.error; }
   for (let i = 0; i < uq.length; i += 100) { const r = await sb.from('questions').upsert(uq.slice(i, i + 100)); if (r.error) throw r.error; }
   for (let i = 0; i < dq.length; i += 100) { const r = await sb.from('questions').delete().in('id', dq.slice(i, i + 100)); if (r.error) throw r.error; }
   if (de.length) { const r = await sb.from('exams').delete().in('id', de); if (r.error) throw r.error; }
+  orphanDel.clear();
   synced = { e: mapSnap(ce), q: qSnap() };
 }
 async function doSave() {
@@ -436,6 +471,11 @@ function samples(examId) {
 }
 
 /* ================= small UI helpers ================= */
+let busyEl = null;
+function busy(on, msg = 'Loading questions…') {
+  if (on) { if (!busyEl) { busyEl = document.createElement('div'); busyEl.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font:600 18px var(--sans);color:#333'; document.body.appendChild(busyEl); } busyEl.textContent = msg; }
+  else if (busyEl) { busyEl.remove(); busyEl = null; }
+}
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 function ask(msg, okLabel = 'Confirm') {
   return new Promise(res => {
@@ -508,7 +548,20 @@ const examQs = id => state.bank.filter(q => q.exam === id);
 function topicsOf(id) { const m = {}; examQs(id).forEach(q => qTags(q).forEach(t => (m[t] = m[t] || []).push(q))); return m; }
 
 /* ================= render root ================= */
+function needFull() {
+  if (view !== 'manage' || manageTab !== 'questions' || editing) return [];
+  return (manageExam === 'all' ? state.exams.map(e => e.id) : [manageExam]).filter(id => state.bank.some(q => q.exam === id && q.stub));
+}
 function render() {
+  const nf = needFull();
+  if (nf.length) {
+    if (!hydrateBusy) {
+      hydrateBusy = true; busy(true);
+      Promise.all(nf.map(hydrateExam)).catch(e => { console.error(e); toast('Could not load the questions. Check your connection and try again.'); view = 'home'; })
+        .finally(() => { hydrateBusy = false; busy(false); render(); });
+    }
+    return;
+  }
   const inSess = view === 'session' && sess && !sess.done;
   document.body.classList.toggle('insess', inSess);
   document.body.classList.remove('menu');
@@ -651,7 +704,15 @@ function startReview(topic) {
   if (!ids.length) return toast('Nothing is due right now.');
   beginSession(ids, 'tutor', 'review', 0, curExam);
 }
-function beginSession(ids, mode, kind, limitMs, examId) {
+async function beginSession(ids, mode, kind, limitMs, examId) {
+  const idx = new Map(state.bank.map(q => [q.id, q])), stubs = ids.filter(id => idx.get(id) && idx.get(id).stub);
+  if (stubs.length) {
+    busy(true);
+    try { await hydrateIds(stubs, idx); } catch (e) { busy(false); console.error(e); return toast('Could not load the questions. Check your connection and try again.'); }
+    busy(false);
+  }
+  ids = ids.filter(id => idx.get(id) && !idx.get(id).stub);
+  if (!ids.length) return toast('These questions are no longer available.');
   sess = { ids, idx: 0, ans: {}, sub: {}, elim: {}, open: {}, kf: {}, hint: {}, prev: {}, rated: {}, visited: { [ids[0]]: 1 }, mode, kind, examId, limitMs, start: Date.now(), review: false, done: false, navOpen: false };
   view = 'session'; clearInterval(timerId); timerId = setInterval(tick, 1000); render(); window.scrollTo(0, 0);
 }
@@ -962,7 +1023,7 @@ document.addEventListener('click', async e => {
     case 'home': view = 'home'; render(); window.scrollTo(0, 0); break;
     case 'openexam': curExam = t.dataset.id; view = 'exam'; render(); window.scrollTo(0, 0); break;
     case 'stats': view = 'stats'; render(); break;
-    case 'manage': editing = null; view = 'manage'; render(); break;
+    case 'manage': editing = null; view = 'manage'; if (manageExam === 'all' && curExam) manageExam = curExam; render(); break;
     case 'addexam': manageTab = 'exams'; view = 'manage'; editing = null; render(); setTimeout(() => { const n = $('#newexam'); if (n) n.focus(); }, 30); break;
     case 'review': startReview(null); break;
     case 'sort': sortBy = sortBy === 'name' ? 'score' : sortBy === 'score' ? 'due' : 'name'; render(); break;
@@ -987,11 +1048,11 @@ document.addEventListener('click', async e => {
     case 'mark': { const q = cur(); state.marks[q.id] = !state.marks[q.id]; if (!state.marks[q.id]) delete state.marks[q.id]; saveData(); render(); break; }
     case 'hint': { const q = cur(); if (!q.hint) toast('This question has no hint.'); else { sess.hint[q.id] = !sess.hint[q.id]; render(); } break; }
     case 'notefocus': { const n = $('#note'); if (n) { n.scrollIntoView({ block: 'center' }); n.focus(); } break; }
-    case 'editcur': { const q = cur(); const keep = sess; editing = JSON.parse(JSON.stringify(q)); sess = null; clearInterval(timerId); view = 'manage'; manageTab = 'questions'; toast('Session closed so you can edit.'); render(); break; }
+    case 'editcur': { const q = cur(); const keep = sess; editing = JSON.parse(JSON.stringify(q)); sess = null; clearInterval(timerId); view = 'manage'; manageTab = 'questions'; if (manageExam === 'all') manageExam = q.exam; toast('Session closed so you can edit.'); render(); break; }
     case 'reviewq': sess.done = false; sess.review = true; sess.idx = i; sess.visited[sess.ids[i]] = 1; view = 'session'; clearInterval(timerId); timerId = setInterval(tick, 1000); render(); window.scrollTo(0, 0); break;
     case 'leave': sess = null; view = 'home'; render(); break;
     case 'mtab': editing = null; manageTab = t.dataset.k; render(); break;
-    case 'newq': editing = blankDraft(); view = 'manage'; manageTab = 'questions'; render(); break;
+    case 'newq': if (manageExam === 'all' && curExam) manageExam = curExam; editing = blankDraft(); view = 'manage'; manageTab = 'questions'; render(); break;
     case 'editq': editing = JSON.parse(JSON.stringify(byId(t.dataset.id))); editing.hint = editing.hint || ''; render(); break;
     case 'morebank': bankLimit += 100; renderBankList(); break;
     case 'delq': if (await ask('Delete this question? This cannot be undone.', 'Delete')) {
@@ -1004,10 +1065,10 @@ document.addEventListener('click', async e => {
     case 'doaddexam': { const n = $('#newexam').value.trim(); if (!n) return toast('Write a name for the exam.'); state.exams.push({ id: uid(), name: n, passMark: 65 }); saveData(); render(); break; }
     case 'delexam': { const ex = examById(t.dataset.id), n = examQs(ex.id).length;
       if (await ask(`Delete "${ex.name}"${n ? ' and its ' + n + ' question' + (n === 1 ? '' : 's') : ''}? This cannot be undone.`, 'Delete')) {
-        state.bank.filter(q => q.exam === ex.id).forEach(q => { delete state.results[q.id]; delete state.cards[q.id]; });
+        state.bank.filter(q => q.exam === ex.id).forEach(q => { if (q.stub) orphanDel.add(q.id); delete state.results[q.id]; delete state.cards[q.id]; });
         state.bank = state.bank.filter(q => q.exam !== ex.id); state.exams = state.exams.filter(x => x.id !== ex.id); if (manageExam === ex.id) manageExam = 'all'; saveData(); render(); } break; }
     case 'import': $('#file').click(); break;
-    case 'export': download('qbank-backup.json', JSON.stringify({ version: 2, name: state.name, exams: state.exams, bank: state.bank, results: state.results, cards: state.cards, marks: state.marks, notes: state.notes, daily: state.daily, history: state.history }, null, 2), 'application/json'); break;
+    case 'export': { busy(true); try { await hydrateAll(); } catch (e) { busy(false); toast('Could not load all the questions for the backup.'); break; } busy(false); download('qbank-backup.json', JSON.stringify({ version: 2, name: state.name, exams: state.exams, bank: state.bank, results: state.results, cards: state.cards, marks: state.marks, notes: state.notes, daily: state.daily, history: state.history }, null, 2), 'application/json'); break; }
     case 'csvtpl': download('qbank-template.csv', 'exam,stem,a,b,c,d,e,correct,explanation,objective,hint,tags,difficulty,exp_a,exp_b,exp_c,exp_d,exp_e\n"Internal Medicine","Which vitamin deficiency causes scurvy?","Vitamin A","Vitamin B12","Vitamin C","Vitamin D","Vitamin K",C,"Vitamin C is needed for collagen synthesis.","Scurvy = vitamin C deficiency","Think about citrus and sailors","Nutrition;Basics",Easy,"","","Correct.","",""\n', 'text/csv'); break;
     case 'rename': { const n = prompt('Your name', state.name); if (n && n.trim()) { state.name = n.trim(); saveData(); render(); } break; }
     case 'logout': await sb.auth.signOut(); location.reload(); break;
