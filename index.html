@@ -373,12 +373,35 @@ function hydrateExam(examId) {
   })().finally(() => { delete hydrating[examId]; }));
 }
 const hydrateAll = () => Promise.all(state.exams.map(e => hydrateExam(e.id)));
-async function hydrateIds(ids, idx) {
-  if (ids.length > 300) { await Promise.all([...new Set(ids.map(id => idx.get(id).exam))].map(hydrateExam)); return; }
+async function fetchByIds(ids, idx) {
   const chunks = []; for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
   let n = 0;
   const worker = async () => { for (;;) { const c = chunks[n++]; if (!c) return; const r = await retry(() => sb.from('questions').select('*').in('id', c)); if (r.error) throw r.error; r.data.forEach(row => mergeRow(idx, row)); } };
   await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker));
+}
+/* a big session starts as soon as the first questions are in; the rest keep loading in the background */
+async function loadRest(s, rest, idx) {
+  const todo = rest.slice();
+  const worker = async () => { while (todo.length && sess === s) { const c = todo.splice(0, 100); try { await fetchByIds(c, idx); } catch (e) { console.error(e); s.loadFailed = true; todo.length = 0; } } };
+  await Promise.all([worker(), worker(), worker()]);
+  if (!s.loadFailed && sess === s) s.pending = null;
+}
+function dropMissing(s, idx) {          // questions deleted on the server meanwhile
+  const keep = s.ids.filter(id => idx.get(id) && !idx.get(id).stub);
+  if (keep.length !== s.ids.length) { s.ids = keep; if (s.idx >= keep.length) s.idx = Math.max(0, keep.length - 1); }
+}
+async function ensureSessionLoaded(s) {
+  const idx = new Map(state.bank.map(q => [q.id, q]));
+  if (s.pending) await s.pending;
+  const left = s.ids.filter(id => idx.get(id) && idx.get(id).stub);
+  if (left.length) await fetchByIds(left, idx);
+  dropMissing(s, idx);
+}
+const curLoading = new Set();
+function loadCur(id) {
+  if (curLoading.has(id)) return; curLoading.add(id); const s = sess; let failed = false;
+  fetchByIds([id], new Map(state.bank.map(q => [q.id, q]))).then(() => dropMissing(s, new Map(state.bank.map(q => [q.id, q]))), e => { failed = true; console.error(e); toast('Could not load this question. Retrying…'); })
+    .finally(() => setTimeout(() => { curLoading.delete(id); if (sess === s) render(); }, failed ? 2500 : 0));
 }
 async function loadData() {
   try {
@@ -705,15 +728,18 @@ function startReview(topic) {
   beginSession(ids, 'tutor', 'review', 0, curExam);
 }
 async function beginSession(ids, mode, kind, limitMs, examId) {
-  const idx = new Map(state.bank.map(q => [q.id, q])), stubs = ids.filter(id => idx.get(id) && idx.get(id).stub);
-  if (stubs.length) {
+  const idx = new Map(state.bank.map(q => [q.id, q])), need = ids.filter(id => idx.get(id) && idx.get(id).stub);
+  const FIRST = 30, big = need.length > FIRST + 10, first = big ? need.slice(0, FIRST) : need, rest = big ? need.slice(FIRST) : [];
+  if (first.length) {
     busy(true);
-    try { await hydrateIds(stubs, idx); } catch (e) { busy(false); console.error(e); return toast('Could not load the questions. Check your connection and try again.'); }
+    try { await fetchByIds(first, idx); } catch (e) { busy(false); console.error(e); return toast('Could not load the questions. Check your connection and try again.'); }
     busy(false);
   }
-  ids = ids.filter(id => idx.get(id) && !idx.get(id).stub);
+  const later = new Set(rest);
+  ids = ids.filter(id => idx.get(id) && (!idx.get(id).stub || later.has(id)));
   if (!ids.length) return toast('These questions are no longer available.');
   sess = { ids, idx: 0, ans: {}, sub: {}, elim: {}, open: {}, kf: {}, hint: {}, prev: {}, rated: {}, visited: { [ids[0]]: 1 }, mode, kind, examId, limitMs, start: Date.now(), review: false, done: false, navOpen: false };
+  if (rest.length) sess.pending = loadRest(sess, rest, idx);
   view = 'session'; clearInterval(timerId); timerId = setInterval(tick, 1000); render(); window.scrollTo(0, 0);
 }
 
@@ -727,6 +753,8 @@ function tick() {
   else t.textContent = fmtTime(el);
 }
 function renderSession() {
+  const q0 = cur();
+  if (q0 && q0.stub) { loadCur(q0.id); return `<section class="card" style="margin-top:20px"><p class="muted" style="margin:0">Loading this question…</p></section>`; }
   const q = cur(), rev = revealed(q), chosen = sess.ans[q.id], ok = chosen === q.correct;
   const hideScore = sess.mode === 'exam' && !sess.review;
   const { v, q: qq } = splitStem(q.stem);
@@ -836,7 +864,14 @@ async function endBlock() {
   const ok = await ask(un ? `${un} question${un === 1 ? ' is' : 's are'} unanswered. End the session anyway?` : 'End this session and see your results?', 'End session');
   if (ok) finishBlock();
 }
-function finishBlock() {
+async function finishBlock() {
+  if (sess.done || sess.finishing) return;
+  sess.finishing = true;
+  if (sess.pending) {
+    busy(true, 'Saving your results…');
+    try { await ensureSessionLoaded(sess); } catch (e) { busy(false); console.error(e); sess.finishing = false; return toast('Could not load all the questions to score this block. Check your connection and try again.'); }
+    busy(false);
+  }
   if (sess.done) return;
   autoRate();
   if (sess.mode === 'exam') sess.ids.forEach(id => {
