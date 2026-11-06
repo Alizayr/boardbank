@@ -3,70 +3,86 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
+<script>(function(){try{var t=localStorage.getItem("bb_theme")||"auto",f=localStorage.getItem("bb_font")||"m",d=document.documentElement;d.dataset.theme=(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light";d.dataset.font=f}catch(e){}})()</script>
 <title>BoardBank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#0f172a; --mute:#64748b; --line:#e2e8f0; --line-2:#cbd5e1; --bg:#f8fafc; --card:#fff;
-  --acc:#3157d5; --acc-h:#2748b8; --acc-soft:#eef2ff;
+  --ink:#0f172a; --mute:#64748b; --line:#e2e8f0; --line-2:#cbd5e1; --bg:#f8fafc; --card:#fff; --surf:#fff;
+  --acc:#3157d5; --acc-h:#2748b8; --acc-soft:#eef2ff; --on-acc:#fff;
   --blue:var(--acc);
   --green:#22a55b; --green-d:#15803d; --green-bg:#ecfdf3;
   --red:#dc2626; --red-bg:#fef2f2;
   --amber:#f59e0b; --amber-bg:#fffbeb; --amber-d:#92400e;
-  --r:12px; --r-s:8px;
+  --hover:#f1f5f9; --soft:#f8fafc; --track:#e2e8f0; --faint:#94a3b8; --ink2:#334155; --ink3:#475569;
+  --danger-line:#fecaca; --fc-bar:#c7d2fe; --heat0:#f1f5f9; --heat1:#dbe4ff; --heat2:#9bb3ff;
+  --shadow:rgba(15,23,42,.1); --exp-line:rgba(15,23,42,.12); --scrim:rgba(15,23,42,.4); --veil:rgba(255,255,255,.7); --veil2:rgba(255,255,255,.8);
+  --r:12px; --r-s:8px; --fz:1;
   --sans:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
+html[data-theme=dark]{
+  --ink:#e7eaf3; --mute:#98a3b8; --line:#2a3246; --line-2:#3a4560; --bg:#0e131d; --card:#161c2a; --surf:#161c2a;
+  --acc:#7b9bff; --acc-h:#9bb4ff; --acc-soft:#1c2646; --on-acc:#0b1226;
+  --green:#3cc97f; --green-d:#7be3ae; --green-bg:#11301f;
+  --red:#f26b6b; --red-bg:#3b1719;
+  --amber:#f2b640; --amber-bg:#3a2e12; --amber-d:#f7d37a;
+  --hover:#212a3e; --soft:#121826; --track:#2a3347; --faint:#6f7b93; --ink2:#c8d0e2; --ink3:#b3bdd2;
+  --danger-line:#5a2528; --fc-bar:#33406b; --heat0:#212a3e; --heat1:#27386b; --heat2:#3f5bb8;
+  --shadow:rgba(0,0,0,.45); --exp-line:rgba(255,255,255,.16); --scrim:rgba(0,0,0,.6); --veil:rgba(255,255,255,.08); --veil2:rgba(14,19,29,.85);
+}
+html[data-font=s]{--fz:.92} html[data-font=l]{--fz:1.12} html[data-font=xl]{--fz:1.25}
 *{box-sizing:border-box}
 html{color-scheme:light}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+html[data-theme=dark]{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 calc(15px * var(--fz))/1.6 var(--sans);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ic{flex:none;vertical-align:middle}
 h1,h2,h3,h4,p{margin:0}
 h3{font-weight:600}
-.muted{color:var(--mute)} .sm{font-size:13px}
+.muted{color:var(--mute)} .sm{font-size:calc(13px * var(--fz))}
 
 /* shell */
 #shell{display:flex;min-height:100vh}
-#side{width:260px;flex:none;background:#fff;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+#side{width:260px;flex:none;background:var(--surf);border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;overflow:auto}
 #content{flex:1;min-width:0;background:var(--bg)}
 body.insess #side{display:none}
-.brand{font:700 22px/1 var(--sans);color:var(--ink)}
+.brand{font:700 calc(22px * var(--fz))/1 var(--sans);color:var(--ink)}
 .brand b{font-weight:inherit;color:inherit}
 .brand-s{padding:4px 12px 22px}
-.card-brand{text-align:center;font-size:28px;margin:6px 0 4px}
-.hi{font:600 15px var(--sans);margin:0 12px 18px;cursor:pointer}
-.lbl{font:500 13px var(--sans);color:var(--mute);margin:18px 12px 6px}
-.nav{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-radius:10px;padding:10px 12px;text-align:left;font-size:15px;color:#334155}
-.nav:hover{background:#f1f5f9}
+.card-brand{text-align:center;font-size:calc(28px * var(--fz));margin:6px 0 4px}
+.hi{font:600 calc(15px * var(--fz)) var(--sans);margin:0 12px 18px;cursor:pointer}
+.lbl{font:500 calc(13px * var(--fz)) var(--sans);color:var(--mute);margin:18px 12px 6px}
+.nav{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-radius:10px;padding:10px 12px;text-align:left;font-size:calc(15px * var(--fz));color:var(--ink2)}
+.nav:hover{background:var(--hover)}
 .nav.on{background:var(--acc-soft);font-weight:600;color:var(--acc)}
 .nav span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dueb{font-style:normal;background:var(--amber-bg);color:var(--amber-d);border-radius:99px;font-size:12px;font-weight:600;padding:1px 8px}
+.dueb{font-style:normal;background:var(--amber-bg);color:var(--amber-d);border-radius:99px;font-size:calc(12px * var(--fz));font-weight:600;padding:1px 8px}
 hr{border:0;border-top:1px solid var(--line);margin:14px 6px}
 #mbar{display:none}
-main{max-width:1080px;margin:0 auto;padding:40px 32px 120px}
+main{max-width:1080px;margin:0 auto;padding:20px 32px 120px}
 body.insess main{max-width:1240px;padding-top:0}
 
 /* buttons */
-.btn{background:var(--acc);color:#fff;border:1px solid var(--acc);border-radius:10px;padding:10px 20px;font-weight:600}
+.btn{background:var(--acc);color:var(--on-acc);border:1px solid var(--acc);border-radius:10px;padding:10px 20px;font-weight:600}
 .btn:hover{background:var(--acc-h);border-color:var(--acc-h)}
-.btn:disabled{background:#e2e8f0;border-color:#e2e8f0;color:#94a3b8;cursor:not-allowed}
-.ghost{background:#fff;border:1px solid var(--line-2);border-radius:10px;padding:9px 16px;font-weight:600;display:inline-flex;gap:8px;align-items:center}
-.ghost:hover{background:#f1f5f9}
-.ghost:disabled{border-color:var(--line);color:#94a3b8;cursor:not-allowed;background:#f8fafc}
-.ghost.danger{color:var(--red);border-color:#fecaca}
+.btn:disabled{background:var(--track);border-color:var(--track);color:var(--faint);cursor:not-allowed}
+.ghost{background:var(--surf);border:1px solid var(--line-2);border-radius:10px;padding:9px 16px;font-weight:600;display:inline-flex;gap:8px;align-items:center}
+.ghost:hover{background:var(--hover)}
+.ghost:disabled{border-color:var(--line);color:var(--faint);cursor:not-allowed;background:var(--soft)}
+.ghost.danger{color:var(--red);border-color:var(--danger-line)}
 .ghost.danger:hover{background:var(--red-bg)}
-.sq{width:40px;height:40px;border-radius:10px;border:1px solid var(--line-2);background:#fff;display:grid;place-items:center;padding:0}
-.sq:hover{background:#f1f5f9}
-.sq:disabled{background:#f1f5f9;border-color:var(--line);color:#94a3b8;cursor:not-allowed}
+.sq{width:40px;height:40px;border-radius:10px;border:1px solid var(--line-2);background:var(--surf);display:grid;place-items:center;padding:0}
+.sq:hover{background:var(--hover)}
+.sq:disabled{background:var(--hover);border-color:var(--line);color:var(--faint);cursor:not-allowed}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .row.sp{justify-content:space-between}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px}
-.crumb{display:flex;align-items:center;gap:12px;margin-bottom:24px;font-size:14px;flex-wrap:wrap}
-.crumb .sep{color:#94a3b8}
+.crumb{display:flex;align-items:center;gap:12px;margin-bottom:24px;font-size:calc(14px * var(--fz));flex-wrap:wrap}
+.crumb .sep{color:var(--faint)}
 .crumb a{color:var(--mute);cursor:pointer;background:none;border:0;padding:0}
 .crumb a:hover{color:var(--ink)}
 .crumb a.sq{color:var(--ink)}
@@ -74,156 +90,156 @@ body.insess main{max-width:1240px;padding-top:0}
 
 /* home */
 .hero{display:block}
-.hero h1{font:600 28px/1.2 var(--sans);margin:4px 0 6px}
-.big{font:600 56px/1 var(--sans);font-variant-numeric:tabular-nums}
+.hero h1{font:600 calc(28px * var(--fz))/1.2 var(--sans);margin:4px 0 6px}
+.big{font:600 calc(56px * var(--fz))/1 var(--sans);font-variant-numeric:tabular-nums}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .fc{display:flex;gap:10px;align-items:flex-end;height:120px;margin-top:16px}
-.fc div{flex:1;text-align:center;font-size:12px;color:var(--mute);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
-.fc i{display:block;background:#c7d2fe;border-radius:6px 6px 2px 2px;min-height:4px;margin-bottom:6px}
+.fc div{flex:1;text-align:center;font-size:calc(12px * var(--fz));color:var(--mute);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.fc i{display:block;background:var(--fc-bar);border-radius:6px 6px 2px 2px;min-height:4px;margin-bottom:6px}
 .fc div.today i{background:var(--acc)}
-.fc b{color:var(--ink);font-size:13px;font-weight:600}
+.fc b{color:var(--ink);font-size:calc(13px * var(--fz));font-weight:600}
 .heat{display:grid;grid-template-columns:repeat(14,1fr);gap:5px;margin-top:16px}
-.heat i{aspect-ratio:1;border-radius:4px;background:#f1f5f9}
-.heat i.l1{background:#dbe4ff}.heat i.l2{background:#9bb3ff}.heat i.l3{background:var(--acc)}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--heat0)}
+.heat i.l1{background:var(--heat1)}.heat i.l2{background:var(--heat2)}.heat i.l3{background:var(--acc)}
 .heat i.now{outline:2px solid var(--ink);outline-offset:1px}
 .exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:14px}
-.excard{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:20px;text-align:left;display:block;width:100%}
+.excard{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:20px;text-align:left;display:block;width:100%}
 .excard:hover{border-color:var(--acc)}
 .excard .ic{color:var(--acc)}
-.excard h3{font-size:17px;margin:10px 0 2px}
-h2.sec{font:600 20px var(--sans);margin:32px 0 0}
+.excard h3{font-size:calc(17px * var(--fz));margin:10px 0 2px}
+h2.sec{font:600 calc(20px * var(--fz)) var(--sans);margin:32px 0 0}
 
 /* curriculum */
-.title{font:600 28px/1.2 var(--sans)}
+.title{font:600 calc(28px * var(--fz))/1.2 var(--sans)}
 .toolbar{display:flex;align-items:center;justify-content:space-between;margin:12px 0 24px;gap:14px;flex-wrap:wrap}
-.topic{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+.topic{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
 .trow{display:grid;grid-template-columns:minmax(140px,1fr) 2fr 48px;gap:24px;align-items:center;width:100%;background:none;border:0;padding:18px 22px;text-align:left;border-radius:var(--r)}
-.trow:hover{background:#f8fafc}
+.trow:hover{background:var(--soft)}
 .tinfo{display:flex;flex-direction:column;min-width:0}
-.tn{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tmeta{font-size:13px;color:var(--mute)}
-.pbar{display:flex;height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden}
+.tn{font-weight:600;font-size:calc(16px * var(--fz));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tmeta{font-size:calc(13px * var(--fz));color:var(--mute)}
+.pbar{display:flex;height:8px;border-radius:99px;background:var(--track);overflow:hidden}
 .pbar i{display:block;height:100%}
 .pbar i.c{background:var(--green)}
 .pbar i.w{background:var(--red)}
-.tscore{font:600 24px var(--sans);text-align:right;font-variant-numeric:tabular-nums}
+.tscore{font:600 calc(24px * var(--fz)) var(--sans);text-align:right;font-variant-numeric:tabular-nums}
 .tbody{padding:0 22px 22px}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);background:#f8fafc;border-radius:10px;padding:18px 8px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);background:var(--soft);border-radius:10px;padding:18px 8px}
 .stats div{padding:0 16px;border-left:1px solid var(--line)}
 .stats div:first-child{border-left:0}
-.stats b{display:block;font-size:13px;font-weight:500;color:var(--mute)}
-.stats span{font:600 20px var(--sans)}
+.stats b{display:block;font-size:calc(13px * var(--fz));font-weight:500;color:var(--mute)}
+.stats span{font:600 calc(20px * var(--fz)) var(--sans)}
 .stats i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
-.formula{margin:18px 0;color:var(--mute);font-size:14px}
-.formula code{display:block;margin-top:12px;background:#f1f5f9;border-radius:10px;padding:12px 16px;font:400 13px/1.6 var(--sans)}
+.formula{margin:18px 0;color:var(--mute);font-size:calc(14px * var(--fz))}
+.formula code{display:block;margin-top:12px;background:var(--hover);border-radius:10px;padding:12px 16px;font:400 calc(13px * var(--fz))/1.6 var(--sans)}
 
 /* setup */
 .setup{max-width:780px;margin:0 auto}
 .setup .head{padding:24px 28px;border-bottom:1px solid var(--line)}
-.setup .head h2{font:600 22px var(--sans)}
+.setup .head h2{font:600 calc(22px * var(--fz)) var(--sans)}
 .setup .sec{padding:24px 28px;border-bottom:1px solid var(--line)}
 .setup .sec:last-child{border-bottom:0}
-.setup h3{font-size:17px}
-.setup input[type=number],.setup select{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;background:#fff;margin-top:14px;font-size:15px}
+.setup h3{font-size:calc(17px * var(--fz))}
+.setup input[type=number],.setup select{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;background:var(--surf);margin-top:14px;font-size:calc(15px * var(--fz))}
 .tm{display:flex;gap:10px;align-items:center;margin-top:10px}
 .tm input{width:84px!important;text-align:center;margin:0!important;padding:10px!important}
 .switch{width:46px;height:26px;border-radius:99px;border:0;background:var(--line-2);position:relative;flex:none;padding:0}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
 .switch.on{background:var(--acc)}
 .switch.on::after{left:23px}
-.sbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 32px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;z-index:6}
+.sbar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1px solid var(--line);padding:14px 32px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;z-index:6}
 body:not(.insess) .sbar{left:260px}
 .sbar .l{display:flex;align-items:center;gap:12px}
 
 /* session */
-.stop{position:sticky;top:0;z-index:7;background:#fff;border-bottom:1px solid var(--line);margin:0 -32px 24px;padding:12px 32px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.qsel{background:none;border:0;font:600 18px var(--sans);display:flex;align-items:center;gap:6px;padding:0 8px 0 0}
+.stop{position:sticky;top:0;z-index:7;background:var(--surf);border-bottom:1px solid var(--line);margin:0 -32px 24px;padding:12px 32px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.qsel{background:none;border:0;font:600 calc(18px * var(--fz)) var(--sans);display:flex;align-items:center;gap:6px;padding:0 8px 0 0}
 .stop .timer{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--mute);font-weight:600}
 .stop .timer.low{color:var(--red)}
-.navpop{position:absolute;top:100%;left:20px;margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.1);display:grid;grid-template-columns:repeat(8,40px);gap:6px;max-height:60vh;overflow:auto}
-.cell{position:relative;width:40px;height:36px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13px;padding:0}
+.navpop{position:absolute;top:100%;left:20px;margin-top:6px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:0 8px 24px var(--shadow);display:grid;grid-template-columns:repeat(8,40px);gap:6px;max-height:60vh;overflow:auto}
+.cell{position:relative;width:40px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surf);font-weight:600;font-size:calc(13px * var(--fz));padding:0}
 .cell.cur{border-color:var(--acc);border-width:2px}
 .cell.ans{background:var(--acc-soft)}
 .cell.ok{background:var(--green-bg);border-color:var(--green)}
 .cell.no{background:var(--red-bg);border-color:var(--red)}
 .cell.fl::after{content:"";position:absolute;top:-1px;right:-1px;border:6px solid transparent;border-top-color:var(--amber);border-right-color:var(--amber)}
 .slay{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
-.qcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 34px}
+.qcard{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:32px 34px}
 .qimg{display:block;max-width:100%;height:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px;background:#fff}
-.vig{font-size:17px;color:#475569;white-space:pre-wrap;margin-bottom:18px;line-height:1.7}
-.qq{font-size:18px;font-weight:600;white-space:pre-wrap;margin-bottom:24px;line-height:1.55}
-.opt{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer;font-size:16px}
-.opt:hover{border-color:var(--line-2);background:#f8fafc}
-.radio{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);background:#fff}
+.vig{font-size:calc(17px * var(--fz));color:var(--ink3);white-space:pre-wrap;margin-bottom:18px;line-height:1.7}
+.qq{font-size:calc(18px * var(--fz));font-weight:600;white-space:pre-wrap;margin-bottom:24px;line-height:1.55}
+.opt{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surf);border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer;font-size:calc(16px * var(--fz))}
+.opt:hover{border-color:var(--line-2);background:var(--soft)}
+.radio{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);background:var(--surf)}
 .opt.sel{border-color:var(--acc);background:var(--acc-soft)}
 .opt.sel .radio{border:6px solid var(--acc)}
 .opt .txt{flex:1;white-space:pre-wrap}
-.opt.elim .txt{text-decoration:line-through;color:#94a3b8}
-.opt .x{font-size:12px;color:var(--mute);padding:4px 8px;border-radius:6px;border:1px solid transparent}
-.opt .x:hover{border-color:var(--line);background:#fff}
-.submit{width:100%;border:0;border-radius:10px;padding:16px;font-size:16px;font-weight:600;background:var(--acc);color:#fff;margin-top:14px}
+.opt.elim .txt{text-decoration:line-through;color:var(--faint)}
+.opt .x{font-size:calc(12px * var(--fz));color:var(--mute);padding:4px 8px;border-radius:6px;border:1px solid transparent}
+.opt .x:hover{border-color:var(--line);background:var(--surf)}
+.submit{width:100%;border:0;border-radius:10px;padding:16px;font-size:calc(16px * var(--fz));font-weight:600;background:var(--acc);color:var(--on-acc);margin-top:14px}
 .submit:hover{background:var(--acc-h)}
-.submit:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed}
-.ocard{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:#fff}
+.submit:disabled{background:var(--track);color:var(--faint);cursor:not-allowed}
+.ocard{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;background:var(--surf)}
 .ocard.good{background:var(--green-bg);border-color:var(--green)}
 .ocard.bad{background:var(--red-bg);border-color:var(--red)}
-.ohead{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:500}
+.ohead{display:flex;align-items:center;gap:12px;font-size:calc(16px * var(--fz));font-weight:500}
 .ohead .t{flex:1;white-space:pre-wrap}
 .ocard.good .ic:first-child{color:var(--green-d)} .ocard.bad .ic:first-child{color:var(--red)}
-.tagc{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;background:#fff}
-.oexp{margin:12px 0 0 4px;padding:2px 0 2px 16px;border-left:2px solid rgba(15,23,42,.12);white-space:pre-wrap;color:#334155}
-.showexp{display:block;width:100%;margin-top:12px;background:rgba(255,255,255,.7);border:0;border-radius:8px;padding:10px;font-weight:600}
-.showexp:hover{background:#fff}
-.kf{border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin:20px 0;background:#fff}
-.kf h3{display:flex;align-items:center;gap:12px;font-size:19px;margin-bottom:12px}
-.kf h4{font-size:15px;font-weight:600;margin:16px 0 8px}
-.kf .body{white-space:pre-wrap;color:#334155}
+.tagc{font-size:calc(12px * var(--fz));font-weight:600;padding:2px 10px;border-radius:99px;background:var(--surf)}
+.oexp{margin:12px 0 0 4px;padding:2px 0 2px 16px;border-left:2px solid var(--exp-line);white-space:pre-wrap;color:var(--ink2)}
+.showexp{display:block;width:100%;margin-top:12px;background:var(--veil);border:0;border-radius:8px;padding:10px;font-weight:600}
+.showexp:hover{background:var(--surf)}
+.kf{border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin:20px 0;background:var(--surf)}
+.kf h3{display:flex;align-items:center;gap:12px;font-size:calc(19px * var(--fz));margin-bottom:12px}
+.kf h4{font-size:calc(15px * var(--fz));font-weight:600;margin:16px 0 8px}
+.kf .body{white-space:pre-wrap;color:var(--ink2)}
 .kf .clamp{max-height:230px;overflow:hidden;position:relative}
-.kf .clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(transparent,#fff)}
-.kf .more{background:none;border:0;font-weight:600;font-size:15px;color:var(--acc);margin-top:10px;display:flex;align-items:center;gap:6px;padding:0}
+.kf .clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(transparent,var(--surf))}
+.kf .more{background:none;border:0;font-weight:600;font-size:calc(15px * var(--fz));color:var(--acc);margin-top:10px;display:flex;align-items:center;gap:6px;padding:0}
 .keyline{background:var(--amber-bg);border-radius:10px;padding:12px 16px;margin:6px 0 4px}
-.rate{border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin:20px 0;background:#fff}
-.rate h3{font-size:17px}
+.rate{border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin:20px 0;background:var(--surf)}
+.rate h3{font-size:calc(17px * var(--fz))}
 .rbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
-.rb{border:1px solid var(--line);border-radius:10px;padding:12px 8px;background:#fff;text-align:center}
-.rb b{display:block;font-size:15px;font-weight:600}
-.rb span{font-size:13px;color:var(--mute)}
+.rb{border:1px solid var(--line);border-radius:10px;padding:12px 8px;background:var(--surf);text-align:center}
+.rb b{display:block;font-size:calc(15px * var(--fz));font-weight:600}
+.rb span{font-size:calc(13px * var(--fz));color:var(--mute)}
 .rb.hard{background:var(--red-bg)} .rb.medium{background:var(--amber-bg)} .rb.easy{background:var(--green-bg)}
 .rb:hover{border-color:var(--ink)}
 .rb.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
 .again{background:var(--red-bg);border-radius:10px;padding:12px 16px;margin-top:14px}
 .hint{background:var(--amber-bg);border-radius:10px;padding:12px 16px;margin-bottom:18px}
 .next{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
-.side .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:16px}
+.side .box{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:16px}
 .side{position:sticky;top:84px}
 .score{display:flex;justify-content:space-between;align-items:baseline}
-.score h3{font-size:17px}
-.score b{font:600 36px var(--sans);font-variant-numeric:tabular-nums}
-.bar{height:8px;border-radius:99px;background:#e2e8f0;margin:14px 0 18px;overflow:hidden}
+.score h3{font-size:calc(17px * var(--fz))}
+.score b{font:600 calc(36px * var(--fz)) var(--sans);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--track);margin:14px 0 18px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--green);border-radius:99px}
-.leg{display:flex;align-items:center;gap:10px;margin:8px 0;color:#475569}
+.leg{display:flex;align-items:center;gap:10px;margin:8px 0;color:var(--ink3)}
 .leg i{width:10px;height:10px;border-radius:50%}
 .leg b{margin-left:auto;font-weight:600;color:var(--ink)}
-.notes textarea{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;min-height:110px;resize:vertical;background:#fff;margin-top:10px}
-.fab{position:fixed;right:24px;bottom:24px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;gap:6px;box-shadow:0 8px 24px rgba(15,23,42,.1);z-index:8}
-.fab button{width:40px;height:40px;border-radius:10px;border:0;background:#fff;display:grid;place-items:center;padding:0}
+.notes textarea{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;min-height:110px;resize:vertical;background:var(--surf);margin-top:10px}
+.fab{position:fixed;right:24px;bottom:24px;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;gap:6px;box-shadow:0 8px 24px var(--shadow);z-index:8}
+.fab button{width:40px;height:40px;border-radius:10px;border:0;background:var(--surf);display:grid;place-items:center;padding:0}
 .fab button.on{background:var(--amber-bg);color:var(--amber-d)}
-.fab button:hover{background:#f1f5f9}
+.fab button:hover{background:var(--hover)}
 
 /* tables, manage */
-.score100{font:600 56px/1 var(--sans);font-variant-numeric:tabular-nums}
+.score100{font:600 calc(56px * var(--fz))/1 var(--sans);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:13px;color:var(--mute);font-weight:500}
-.pill{font-weight:600;font-size:12px;padding:2px 10px;border-radius:99px}
+th{font-size:calc(13px * var(--fz));color:var(--mute);font-weight:500}
+.pill{font-weight:600;font-size:calc(12px * var(--fz));padding:2px 10px;border-radius:99px}
 .pill.ok{background:var(--green-bg);color:var(--green-d)} .pill.no{background:var(--red-bg);color:var(--red)} .pill.na{background:var(--amber-bg);color:var(--amber-d)}
 .tabs{display:flex;gap:6px;margin:16px 0}
-.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 18px;font-weight:600}
-.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-label.f{display:block;font-weight:600;font-size:14px;margin:18px 0 6px}
-.in,select.in,textarea.in{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:10px 14px;background:#fff}
+.tab{border:1px solid var(--line);background:var(--surf);border-radius:99px;padding:8px 18px;font-weight:600}
+.tab.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+label.f{display:block;font-weight:600;font-size:calc(14px * var(--fz));margin:18px 0 6px}
+.in,select.in,textarea.in{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:10px 14px;background:var(--surf)}
 textarea.in{resize:vertical}
-.chip{display:inline-block;background:#f1f5f9;border-radius:99px;padding:2px 10px;font-size:12px;margin:0 5px 4px 0}
+.chip{display:inline-block;background:var(--hover);border-radius:99px;padding:2px 10px;font-size:calc(12px * var(--fz));margin:0 5px 4px 0}
 .qrow{display:flex;gap:14px;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--line)}
 .qrow:last-child{border-bottom:0}
 .qrow .s{flex:1;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
@@ -231,16 +247,30 @@ textarea.in{resize:vertical}
 .oe .cp{display:flex;gap:6px;align-items:center;padding-top:10px;white-space:nowrap;font-weight:600}
 .oe-f{flex:1;display:grid;gap:8px}
 .empty{text-align:center;padding:44px 12px;color:var(--mute)}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:10px;z-index:40}
-.ov{position:fixed;inset:0;background:rgba(15,23,42,.4);display:grid;place-items:center;z-index:50;padding:16px}
-.ov .box{background:#fff;border-radius:16px;padding:24px;max-width:420px;width:100%}
-.note{background:var(--amber-bg);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:10px;z-index:40}
+.ov{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;z-index:50;padding:16px}
+.ov .box{background:var(--surf);border-radius:16px;padding:24px;max-width:420px;width:100%}
+.note{background:var(--amber-bg);border-radius:10px;padding:10px 14px;font-size:calc(13px * var(--fz));margin-bottom:16px}
 
+#mbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:var(--bg);position:sticky;top:0;z-index:20;min-height:58px}
+#mbar #menubtn,#mbar .brand{display:none}
+#mbar #setbtn{margin-left:auto}
+body.insess #mbar{display:none}
+.seg{display:flex;gap:4px;background:var(--hover);border-radius:10px;padding:4px;margin:6px 0 14px}
+.seg button{flex:1;min-width:0;white-space:nowrap;border:0;background:none;border-radius:8px;padding:8px 4px;font:600 calc(14px * var(--fz)) var(--sans);color:var(--ink2)}
+.seg button.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+#setpop{--fz:1;position:fixed;top:62px;right:16px;z-index:60;width:min(340px,calc(100vw - 32px));background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 12px 32px var(--shadow)}
+#setpop[hidden]{display:none}
+.sp-h{padding:2px 4px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.sp-l{font:500 calc(13px * var(--fz)) var(--sans);color:var(--mute);margin:4px 2px}
+.ocard.good,.ocard.bad{border-width:2px}
+.sec .muted{font-weight:500}
 @media (max-width:960px){
-  #side{position:fixed;left:0;top:0;z-index:30;transform:translateX(-102%);transition:transform .2s;width:285px;box-shadow:0 0 40px rgba(15,23,42,.2)}
+  #side{position:fixed;left:0;top:0;z-index:30;transform:translateX(-102%);transition:transform .2s;width:285px;box-shadow:0 0 40px var(--shadow)}
   body.menu #side{transform:none}
-  #mbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-  body.insess #mbar{display:none}
+  #mbar{padding:10px 16px;background:var(--surf);border-bottom:1px solid var(--line)}
+  #mbar #menubtn{display:grid}
+  #mbar .brand{display:inline}
   body:not(.insess) .sbar{left:0}
   .slay{grid-template-columns:1fr}
   .side{position:static}
@@ -253,8 +283,8 @@ textarea.in{resize:vertical}
   .stop{margin:0 -16px 20px;padding:10px 16px}
   .qcard{padding:22px 18px;border-radius:14px}
   .navpop{grid-template-columns:repeat(6,40px)}
-  .title,.hero h1{font-size:24px}
-  .big{font-size:44px}
+  .title,.hero h1{font-size:calc(24px * var(--fz))}
+  .big{font-size:calc(44px * var(--fz))}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 #auth,#namebox{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;padding:20px}#auth[hidden],#namebox[hidden],#au-nw[hidden]{display:none}
@@ -264,13 +294,13 @@ textarea.in{resize:vertical}
 <div id="shell">
   <aside id="side" aria-label="Main navigation"></aside>
   <div id="content">
-    <div id="mbar"><button class="sq" data-act="menu" aria-label="Menu" id="menubtn"></button><span class="brand" style="font-size:20px">BoardBank</span></div>
+    <div id="mbar"><button class="sq" data-act="menu" aria-label="Menu" id="menubtn"></button><span class="brand" style="font-size:calc(20px * var(--fz))">BoardBank</span><button class="sq" data-act="settings" aria-label="Settings" id="setbtn"></button></div>
     <main id="app"></main>
   </div>
 </div>
 <div id="fabslot"></div>
 <div id="auth"><div class="card" style="max-width:380px;width:100%"><div class="brand card-brand">BoardBank</div>
-<h2 id="au-t" style="font:600 20px var(--sans);margin-top:14px;text-align:center">Sign in</h2>
+<h2 id="au-t" style="font:600 calc(20px * var(--fz)) var(--sans);margin-top:14px;text-align:center">Sign in</h2>
 <form id="authf"><div id="au-nw" hidden><label class="f" for="au-n">Your name</label><input class="in" id="au-n" type="text" autocomplete="name"></div>
 <label class="f" for="au-e">Email</label><input class="in" id="au-e" type="email" autocomplete="email" required>
 <label class="f" for="au-p">Password</label><input class="in" id="au-p" type="password" autocomplete="current-password" minlength="6" required>
@@ -278,7 +308,7 @@ textarea.in{resize:vertical}
 <p class="muted sm" id="au-m" style="margin-top:14px;min-height:1.4em"></p>
 <p class="sm" style="margin-top:6px"><span class="muted" id="au-q">New here?</span> <a href="#" id="au-sw" style="color:var(--ink);font-weight:700">Create an account</a></p></form></div></div>
 <div id="namebox" hidden><div class="card" style="max-width:380px;width:100%"><div class="brand card-brand">BoardBank</div>
-<h2 style="font:600 20px var(--sans);margin-top:14px;text-align:center">What should we call you?</h2>
+<h2 style="font:600 calc(20px * var(--fz)) var(--sans);margin-top:14px;text-align:center">What should we call you?</h2>
 <form id="nbf"><label class="f" for="nb-n">Your name</label><input class="in" id="nb-n" type="text" autocomplete="name" required>
 <button class="btn" type="submit" style="width:100%;margin-top:22px">Continue</button></form></div></div>
 <input type="file" id="file" accept=".json,.csv,text/csv,application/json" hidden>
@@ -299,6 +329,8 @@ const LETTERS = 'ABCDEFGH';
 const KEY = 'qbank-v1';
 const DAY = 864e5;
 const IC = {
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
   book:'<path d="M3 5.5c2.5-1 5.5-1 9 1.5 3.5-2.5 6.5-2.5 9-1.5V19c-2.5-1-5.5-1-9 1.5C8.5 18 5.5 18 3 19z"/><path d="M12 7v13.5"/>',
   grid:'<circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -323,12 +355,63 @@ let state = { bank: [], results: {}, history: [], exams: [], cards: {}, marks: {
 let view = 'home', curExam = null, sess = null, timerId = null, editing = null;
 let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', manageExam = 'all', bankQuery = '', bankLimit = 50, bankTimer = null, persistWorks = true;
 
+/* ================= categories, preferences, share ================= */
+const CATS = ['Internal Medicine', 'Surgery'];
+let catCol = false;                                   // true once the "category" column exists in Supabase
+const guessCat = n => /neuro|surg/i.test(String(n || '')) ? 'Surgery' : 'Internal Medicine';
+const catOf = e => e.category || guessCat(e.name);
+function catList() {
+  const m = new Map(); state.exams.forEach(e => { const c = catOf(e); if (!m.has(c)) m.set(c, []); m.get(c).push(e); });
+  return [...CATS, ...[...m.keys()].filter(c => !CATS.includes(c)).sort()].filter(c => m.has(c)).map(c => [c, m.get(c)]);
+}
+const THEMES = [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']], FONTS = [['s', 'Small'], ['m', 'Medium'], ['l', 'Large'], ['xl', 'XL']];
+const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+function applyPrefs() {
+  const t = pref('bb_theme', 'auto'), f = pref('bb_font', 'm'), r = document.documentElement;
+  r.dataset.theme = (t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) ? 'dark' : 'light'; r.dataset.font = f;
+}
+const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} applyPrefs(); };
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyPrefs); } catch (e) {}
+function closeSetPop() { const el = $('#setpop'); if (el) el.hidden = true; }
+function renderSetPop() {
+  let el = $('#setpop'); if (!el) { el = document.createElement('div'); el.id = 'setpop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Settings'); document.body.appendChild(el); }
+  const t = pref('bb_theme', 'auto'), f = pref('bb_font', 'm');
+  const seg = (items, cur, act, label) => `<div class="seg" role="group" aria-label="${label}">${items.map(([k, l]) => `<button class="${cur === k ? 'on' : ''}" data-act="${act}" data-k="${k}" aria-pressed="${cur === k}">${l}</button>`).join('')}</div>`;
+  el.hidden = false;
+  el.innerHTML = `<div class="sp-h"><b>${esc(state.name)}</b><div class="muted sm">${esc((me && me.email) || '')}</div></div>
+    <div class="sp-l">Appearance</div>${seg(THEMES, t, 'theme', 'Appearance')}
+    <div class="sp-l">Text size</div>${seg(FONTS, f, 'font', 'Text size')}
+    <hr><button class="nav" data-act="logout">${ic('close')}<span>Sign out</span></button>`;
+}
+function toggleSetPop() { const el = $('#setpop'); if (el && !el.hidden) closeSetPop(); else renderSetPop(); }
+const absUrl = u => /^(data:|https?:)/i.test(u) ? u : new URL(u, location.href).href;
+function questionText(q) {
+  const L = 'ABCDEFGH', ex = examById(q.exam);
+  const imgs = [...String(q.stem).matchAll(IMG_RE), ...String(q.explanation || '').matchAll(IMG_RE)].map(m => m[1]).filter(u => !u.startsWith('data:'));
+  const mine = sess && sess.ans && sess.ans[q.id] !== undefined ? L[sess.ans[q.id]] : '';
+  const ca = q.options[q.correct];
+  return [[ex && ex.name, (q.tags || [])[0]].filter(Boolean).join(' - '), noImg(q.stem), q.options.map((o, i) => `${L[i]}. ${o.text}`).join('\n'),
+    mine ? `My answer: ${mine}` : '', `Correct answer: ${L[q.correct]}${ca ? ' (' + ca.text + ')' : ''}`,
+    q.explanation ? 'Explanation:\n' + noImg(q.explanation) : '', ...imgs.map(u => 'Image: ' + absUrl(u))].filter(Boolean).join('\n\n');
+}
+async function shareQuestion() {
+  const q = cur(); if (!q || q.stub) return;
+  const text = questionText(q);
+  if (navigator.share) { try { await navigator.share({ title: 'BoardBank question', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); toast('Question copied. Paste it anywhere to share.'); }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Question copied. Paste it anywhere to share.'); } catch (_) { toast('Could not copy the question.'); }
+    ta.remove();
+  }
+}
+
 /* ================= storage (Supabase) ================= */
 const sb = window.supabase.createClient('https://vlrgorcmrlugvipsvdjs.supabase.co', 'sb_publishable_4mQXmAzgM-RF69GHY2d9VA_MKLpzccT');
 const orphanDel = new Set(); let hydrateBusy = false;
 let loadErr = '', me = null, isAdmin = false, loaded = false, synced = { e: new Map(), q: new Map() };
 const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'name', 'named'];
-const eRow = e => ({ id: e.id, name: e.name, pass_mark: e.passMark });
+const eRow = e => catCol ? ({ id: e.id, name: e.name, pass_mark: e.passMark, category: catOf(e) }) : ({ id: e.id, name: e.name, pass_mark: e.passMark });
 const qRow = q => ({ id: q.id, exam_id: q.exam, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation || '', objective: q.objective || '', hint: q.hint || '', tags: q.tags || [], difficulty: q.difficulty || 'Medium' });
 const mapSnap = (rows) => new Map(rows.map(r => [r.id, JSON.stringify(r)]));
 /* questions are compared by a short hash cached per object, so a save never re-serialises thousands of rows (and their images) again */
@@ -412,7 +495,8 @@ async function loadData() {
     if (ex.error) throw ex.error;
     const rows = await fetchAll(() => sb.from('questions').select('id,exam_id,tags,difficulty'), 1000, await countQ(), 4);
     isAdmin = !!ad.data;
-    state.exams = ex.data.map(e => ({ id: e.id, name: e.name, passMark: e.pass_mark }));
+    catCol = ex.data.length > 0 && Object.prototype.hasOwnProperty.call(ex.data[0], 'category');
+    state.exams = ex.data.map(e => ({ id: e.id, name: e.name, passMark: e.pass_mark, category: e.category || null }));
     state.bank = rows.map(stubQ);
     const saved = (us.data && us.data.data) || {}, dflt = (me.email || 'Doctor').split('@')[0];
     Object.assign(state, saved);
@@ -449,7 +533,7 @@ const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveDat
 function migrate() {
   state.exams = state.exams || []; state.cards = state.cards || {}; state.marks = state.marks || {};
   state.notes = state.notes || {}; state.daily = state.daily || {}; state.results = state.results || {}; state.history = state.history || [];
-  if (!state.exams.length) state.exams.push({ id: uid(), name: 'Internal Medicine', passMark: 65 });
+  if (!state.exams.length) state.exams.push({ id: uid(), name: 'Internal Medicine', passMark: 65, category: 'Internal Medicine' });
   state.bank.forEach(q => { if (!q.exam || !state.exams.find(e => e.id === q.exam)) q.exam = state.exams[0].id; });
 }
 
@@ -496,7 +580,7 @@ function samples(examId) {
 /* ================= small UI helpers ================= */
 let busyEl = null;
 function busy(on, msg = 'Loading questions…') {
-  if (on) { if (!busyEl) { busyEl = document.createElement('div'); busyEl.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font:600 18px var(--sans);color:#333'; document.body.appendChild(busyEl); } busyEl.textContent = msg; }
+  if (on) { if (!busyEl) { busyEl = document.createElement('div'); busyEl.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--veil2);font:600 calc(18px * var(--fz)) var(--sans);color:var(--ink)'; document.body.appendChild(busyEl); } busyEl.textContent = msg; }
   else if (busyEl) { busyEl.remove(); busyEl = null; }
 }
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
@@ -571,24 +655,11 @@ const examQs = id => state.bank.filter(q => q.exam === id);
 function topicsOf(id) { const m = {}; examQs(id).forEach(q => qTags(q).forEach(t => (m[t] = m[t] || []).push(q))); return m; }
 
 /* ================= render root ================= */
-function needFull() {
-  if (view !== 'manage' || manageTab !== 'questions' || editing) return [];
-  return (manageExam === 'all' ? state.exams.map(e => e.id) : [manageExam]).filter(id => state.bank.some(q => q.exam === id && q.stub));
-}
 function render() {
-  const nf = needFull();
-  if (nf.length) {
-    if (!hydrateBusy) {
-      hydrateBusy = true; busy(true);
-      Promise.all(nf.map(hydrateExam)).catch(e => { console.error(e); toast('Could not load the questions. Check your connection and try again.'); view = 'home'; })
-        .finally(() => { hydrateBusy = false; busy(false); render(); });
-    }
-    return;
-  }
   const inSess = view === 'session' && sess && !sess.done;
   document.body.classList.toggle('insess', inSess);
   document.body.classList.remove('menu');
-  $('#menubtn').innerHTML = ic('menu');
+  $('#menubtn').innerHTML = ic('menu'); $('#setbtn').innerHTML = ic('gear');
   renderSide();
   const note = persistWorks ? '' : `<div class="note">Saving is not available in this window. Use Export in Manage to keep your work.</div>`;
   let html = '';
@@ -601,7 +672,7 @@ function render() {
   else if (view === 'stats') html = renderStats();
   $('#app').innerHTML = note + html;
   $('#fabslot').innerHTML = inSess ? renderFab() : '';
-  if (view === 'manage' && !editing) renderBankList();
+  if (view === 'manage' && !editing) { if (bankQuery.trim().length >= 3 && !bankHits) bankSearch(); else renderBankList(); }
   if (inSess) tick();
 }
 function renderSide() {
@@ -609,14 +680,12 @@ function renderSide() {
   $('#side').innerHTML = `
     <div class="brand brand-s">BoardBank</div>
     <div class="hi" data-act="rename" title="Change name">Hi ${esc(state.name)}</div>
-    <div class="lbl">Your exams</div>
-    ${state.exams.map(e => { const n = duePool(e.id).length; return `<button class="nav ${view === 'exam' && curExam === e.id ? 'on' : ''}" data-act="openexam" data-id="${e.id}">${ic('book')}<span>${esc(e.name)}</span>${n ? `<i class="dueb">${n}</i>` : ''}</button>`; }).join('')}
+    ${catList().map(([c, exs]) => `<div class="lbl">${esc(c)}</div>` + exs.map(e => { const n = duePool(e.id).length; return `<button class="nav ${view === 'exam' && curExam === e.id ? 'on' : ''}" data-act="openexam" data-id="${e.id}">${ic('book')}<span>${esc(e.name)}</span>${n ? `<i class="dueb">${n}</i>` : ''}</button>`; }).join('')).join('')}
     <hr>
     <button class="nav ${view === 'home' ? 'on' : ''}" data-act="home">${ic('clock')}<span>Today</span>${due ? `<i class="dueb">${due}</i>` : ''}</button>
     <button class="nav ${view === 'stats' ? 'on' : ''}" data-act="stats">${ic('chart')}<span>Performance</span></button>
     ${isAdmin ? `<button class="nav ${view === 'manage' ? 'on' : ''}" data-act="manage">${ic('grid')}<span>Manage</span></button>
-    <button class="nav" data-act="addexam">${ic('plus')}<span>Add new exam</span></button>` : ''}
-    <button class="nav" data-act="logout">${ic('close')}<span>Sign out</span></button>`;
+    <button class="nav" data-act="addexam">${ic('plus')}<span>Add new exam</span></button>` : ''}`;
 }
 
 /* ================= home ================= */
@@ -628,7 +697,8 @@ function renderHome() {
   const bars = fc.map((v, d) => `<div class="${d === 0 ? 'today' : ''}"><b>${v}</b><i style="height:${Math.round(78 * v / mx)}px"></i>${d === 0 ? 'Today' : new Date(t0 + d * DAY).toLocaleDateString('en', { weekday: 'short' })}</div>`).join('');
   let heat = ''; for (let d = 27; d >= 0; d--) { const k = dayKey(t0 - d * DAY), v = state.daily[k] || 0; heat += `<i class="${v >= 15 ? 'l3' : v >= 5 ? 'l2' : v > 0 ? 'l1' : ''} ${d === 0 ? 'now' : ''}" title="${k}: ${v} answered"></i>`; }
   const today = state.daily[dayKey(now)] || 0;
-  const exCards = state.exams.map(e => { const s = statsOf(examQs(e.id)); return `<button class="excard" data-act="openexam" data-id="${e.id}">${ic('book', 24)}<h3>${esc(e.name)}</h3><div class="muted sm">${s.total} question${s.total === 1 ? '' : 's'}${s.due ? ' · ' + s.due + ' due' : ''}</div><div style="margin-top:12px;font:600 30px var(--sans)">${s.score}<span class="muted sm" style="font-weight:500"> progress score</span></div></button>`; }).join('');
+  const exCard = e => { const s = statsOf(examQs(e.id)); return `<button class="excard" data-act="openexam" data-id="${e.id}">${ic('book', 24)}<h3>${esc(e.name)}</h3><div class="muted sm">${s.total} question${s.total === 1 ? '' : 's'}${s.due ? ' · ' + s.due + ' due' : ''}</div><div style="margin-top:12px;font:600 calc(30px * var(--fz)) var(--sans)">${s.score}<span class="muted sm" style="font-weight:500"> progress score</span></div></button>`; };
+  const exSections = catList().map(([c, exs]) => `<h2 class="sec">${esc(c)} <span class="muted sm">· ${exs.length} source${exs.length === 1 ? '' : 's'}</span></h2><div class="exgrid">${exs.map(exCard).join('')}</div>`).join('');
   return `<section class="card hero"><div>
       <div class="muted">${new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
       <h1>${n ? 'Time to review' : 'You are all caught up'}</h1>
@@ -639,8 +709,7 @@ function renderHome() {
       <section class="card"><h3>Coming up</h3><div class="muted sm">Reviews due over the next 7 days</div><div class="fc">${bars}</div></section>
       <section class="card"><h3>${today} answered today</h3><div class="muted sm">Your last four weeks</div><div class="heat">${heat}</div></section>
     </div>
-    <h2 class="sec">Your exams</h2>
-    ${state.exams.length ? `<div class="exgrid">${exCards}</div>` : ''}`;
+    ${exSections}`;
 }
 
 /* ================= exam / curriculum ================= */
@@ -651,7 +720,7 @@ function renderExam() {
   names.sort((a, b) => sortBy === 'score' ? stat[a].score - stat[b].score : sortBy === 'due' ? stat[b].due - stat[a].due : a.localeCompare(b));
   const allS = statsOf(examQs(e.id));
   const sortLabel = { name: 'Name', score: 'Lowest score', due: 'Most due' }[sortBy];
-  if (!names.length) return `<div class="crumb"><a data-act="home">Home</a><span class="sep">/</span><b>${esc(e.name)}</b></div><div class="card empty"><h2 style="font:600 22px var(--sans)">No questions in ${esc(e.name)} yet</h2><p style="margin:8px 0 16px">Add your first question to start studying.</p><button class="btn" data-act="newq">Add a question</button></div>`;
+  if (!names.length) return `<div class="crumb"><a data-act="home">Home</a><span class="sep">/</span><b>${esc(e.name)}</b></div><div class="card empty"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">No questions in ${esc(e.name)} yet</h2><p style="margin:8px 0 16px">Add your first question to start studying.</p><button class="btn" data-act="newq">Add a question</button></div>`;
   return `<div class="crumb"><a data-act="home" aria-label="Back" class="sq" style="display:grid">${ic('left')}</a><a data-act="home">Home</a><span class="sep">/</span><b>${esc(e.name)}</b></div>
     <h1 class="title">Curriculum</h1>
     <div class="toolbar"><span class="muted">${names.length} topic${names.length === 1 ? '' : 's'}, ${allS.total} question${allS.total === 1 ? '' : 's'}</span>
@@ -809,6 +878,7 @@ function renderSession() {
       <button class="sq" data-act="prev" aria-label="Previous question" ${sess.idx === 0 ? 'disabled' : ''}>${ic('left')}</button><button class="sq" data-act="next" aria-label="Next question" ${last ? 'disabled' : ''}>${ic('right')}</button>
       ${sess.navOpen ? `<div class="navpop">${cells}</div>` : ''}</div>
     <span class="timer" id="timer"></span>
+    <button class="sq" data-act="settings" aria-label="Settings">${ic('gear')}</button>
     <button class="ghost" data-act="end">${ic('close', 18)} ${sess.review ? 'Close review' : 'End session'}</button></div>
   <div class="slay"><div>
     <section class="qcard">${sess.hint[q.id] && q.hint ? `<div class="hint"><b>Hint.</b> <span dir="auto">${esc(q.hint)}</span></div>` : ''}
@@ -832,6 +902,7 @@ function renderFab() {
     <button data-act="editcur" aria-label="Edit this question" title="Edit this question">${ic('plus')}</button>
     <button data-act="notefocus" aria-label="Note" title="Note">${ic('note')}</button>
     <button class="${state.marks[q.id] ? 'on' : ''}" data-act="mark" aria-label="Bookmark" aria-pressed="${!!state.marks[q.id]}" title="Bookmark">${ic('mark')}</button>
+    <button data-act="share" aria-label="Share this question" title="Share this question">${ic('share')}</button>
     <button data-act="hint" aria-label="Hint" title="Hint">${ic('bulb')}</button></div>`;
 }
 function goTo(i) { autoRate(); sess.idx = i; sess.navOpen = false; sess.visited[sess.ids[i]] = 1; render(); window.scrollTo(0, 0); }
@@ -905,26 +976,45 @@ function renderManage() {
   if (editing) return renderEditor();
   const tabs = `<div class="tabs" role="tablist">${[['questions', 'Questions'], ['exams', 'Exams'], ['settings', 'Settings']].map(([k, l]) => `<button class="tab ${manageTab === k ? 'on' : ''}" data-act="mtab" data-k="${k}" role="tab" aria-selected="${manageTab === k}">${l}</button>`).join('')}</div>`;
   let body = '';
-  if (manageTab === 'questions') body = `<section class="card"><div class="row sp"><h2 style="font:600 22px var(--sans)">Questions (${state.bank.length})</h2>
+  if (manageTab === 'questions') body = `<section class="card"><div class="row sp"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">Questions (${state.bank.length})</h2>
       <div class="row"><button class="btn" data-act="newq">Add question</button><button class="ghost" data-act="import">Import</button><button class="ghost" data-act="export">Export</button><button class="ghost" data-act="csvtpl">CSV template</button></div></div>
       <div class="row" style="margin-top:16px"><div style="flex:1;min-width:200px"><input class="in" type="text" id="bq" dir="auto" placeholder="Search by text or topic" value="${esc(bankQuery)}" aria-label="Search questions"></div>
       <select class="in" id="mexam" style="width:auto" aria-label="Filter by exam"><option value="all">All exams</option>${state.exams.map(e => `<option value="${e.id}" ${manageExam === e.id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select></div>
       <div id="banklist" style="margin-top:10px"></div></section>`;
-  else if (manageTab === 'exams') body = `<section class="card"><h2 style="font:600 22px var(--sans)">Exams</h2><p class="muted" style="margin:6px 0 10px">Each exam has its own topics and questions.</p>
+  else if (manageTab === 'exams') body = `<section class="card"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">Exams</h2><p class="muted" style="margin:6px 0 10px">Each exam has its own topics and questions. Choose a category to group exams on the home page.</p>${catCol ? '' : `<div class="note">Categories are guessed from the exam name until the <b>category</b> column is added in Supabase, so changes here are not saved yet.</div>`}
       ${state.exams.map(e => `<div class="row" style="margin:12px 0" data-eid="${e.id}"><input class="in ex-name" style="flex:1;min-width:180px" dir="auto" value="${esc(e.name)}" aria-label="Exam name">
+      <select class="in ex-cat" style="width:auto" aria-label="Category">${[...new Set([...CATS, catOf(e)])].map(c => `<option ${catOf(e) === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
       <span class="muted sm">${examQs(e.id).length} questions</span><button class="ghost danger" data-act="delexam" data-id="${e.id}" ${state.exams.length < 2 ? 'disabled' : ''}>Delete</button></div>`).join('')}
       <div class="row" style="margin-top:20px"><input class="in" id="newexam" style="flex:1;min-width:180px" dir="auto" placeholder="New exam name, for example MRCP Part 1"><button class="btn" data-act="doaddexam">Add exam</button></div></section>`;
-  else body = `<section class="card"><h2 style="font:600 22px var(--sans)">Settings</h2><label class="f" for="nm">Your name</label><input class="in" id="nm" style="max-width:320px" value="${esc(state.name)}">
+  else body = `<section class="card"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">Settings</h2><label class="f" for="nm">Your name</label><input class="in" id="nm" style="max-width:320px" value="${esc(state.name)}">
       <div style="margin-top:26px"><button class="ghost danger" data-act="reset">Reset all results and review schedule</button></div></section>`;
   return `<h1 class="title" style="margin-bottom:6px">Manage</h1>${tabs}${body}`;
 }
 const stemCache = new WeakMap();
 const stemLC = q => { let v = stemCache.get(q); if (v === undefined) { v = plain(q.stem).toLowerCase(); stemCache.set(q, v); } return v; };
-function renderBankList() {
+let bankHits = null, bankSeq = 0;
+async function bankSearch() {
+  const q = bankQuery.trim().replace(/[%\\]/g, '');
+  if (q.length < 3) { bankHits = null; return renderBankList(); }
+  try {
+    let b = sb.from('questions').select('id').ilike('stem', '%' + q + '%').limit(3000);
+    if (manageExam !== 'all') b = b.eq('exam_id', manageExam);
+    const r = await b; if (r.error) throw r.error; bankHits = new Set(r.data.map(x => x.id));
+  } catch (e) { console.error(e); bankHits = null; }
+  renderBankList();
+}
+async function renderBankList() {
   const el = $('#banklist'); if (!el) return;
-  const q = bankQuery.trim().toLowerCase();
-  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || stemLC(x).includes(q) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
-  const shown = list.slice(0, bankLimit);
+  const my = ++bankSeq, q = bankQuery.trim().toLowerCase();
+  const list = state.bank.filter(x => (manageExam === 'all' || x.exam === manageExam) && (!q || (!x.stub && stemLC(x).includes(q)) || (bankHits && bankHits.has(x.id)) || (x.tags || []).some(t => t.toLowerCase().includes(q))));
+  let shown = list.slice(0, bankLimit);
+  const stubs = shown.filter(x => x.stub);
+  if (stubs.length) {
+    el.style.opacity = '.55';
+    try { await fetchByIds(stubs.map(x => x.id), new Map(state.bank.map(x => [x.id, x]))); } catch (e) { console.error(e); toast('Could not load these questions. Check your connection and try again.'); }
+    if (my !== bankSeq || !document.body.contains(el)) return;
+    el.style.opacity = ''; shown = shown.filter(x => !x.stub);
+  }
   el.innerHTML = list.length ? shown.map(x => { const r = state.results[x.id], e = examById(x.exam);
     return `<div class="qrow"><div class="s" dir="auto"><div>${esc(plain(x.stem).length > 150 ? plain(x.stem).slice(0, 150) + '…' : plain(x.stem))}</div>
       <div style="margin-top:6px"><span class="chip" style="background:var(--acc-soft);color:var(--acc)">${esc(e ? e.name : '')}</span>${(x.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}<span class="muted sm">${x.options.length} choices${r && r.attempts ? ' · ' + r.correct + '/' + r.attempts + ' correct' : ''}</span></div></div>
@@ -976,7 +1066,7 @@ function saveQuestion() {
 function ensureExam(nameOrId, fallback) {
   if (!nameOrId) return fallback;
   let e = state.exams.find(x => x.id === nameOrId || x.name.toLowerCase() === String(nameOrId).toLowerCase());
-  if (!e) { e = { id: uid(), name: String(nameOrId), passMark: 65 }; state.exams.push(e); }
+  if (!e) { e = { id: uid(), name: String(nameOrId), passMark: 65, category: guessCat(nameOrId) }; state.exams.push(e); }
   return e.id;
 }
 function normQ(r, fallbackExam) {
@@ -1041,19 +1131,24 @@ function renderStats() {
   const cards = Object.keys(state.cards).filter(id => byId(id)), dueN = duePool().length;
   const mature = cards.filter(id => state.cards[id].interval >= 21).length;
   const hist = state.history.slice(-10).reverse().map(h => `<tr><td>${new Date(h.at).toLocaleString()}</td><td>${h.kind === 'review' ? 'Review' : h.mode === 'tutor' ? 'Tutor' : 'Exam'}</td><td>${h.correct}/${h.total}</td><td>${Math.round(100 * h.correct / h.total)}%</td></tr>`).join('');
-  if (!att) return `<h1 class="title">Performance</h1><div class="card empty" style="margin-top:20px"><h2 style="font:600 22px var(--sans)">No results yet</h2><p style="margin:8px 0 0">Finish a session to see your performance here.</p></div>`;
+  if (!att) return `<h1 class="title">Performance</h1><div class="card empty" style="margin-top:20px"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">No results yet</h2><p style="margin:8px 0 0">Finish a session to see your performance here.</p></div>`;
   return `<h1 class="title">Performance</h1><section class="card" style="margin-top:20px"><div class="row" style="gap:44px"><div><div class="score100">${Math.round(100 * cor / att)}%</div><div class="muted">${cor} of ${att} answers correct</div></div>
-    <div><div class="score100" style="font-size:46px">${cards.length}</div><div class="muted">in your review schedule</div></div>
-    <div><div class="score100" style="font-size:46px">${mature}</div><div class="muted">well known (21+ day interval)</div></div>
-    <div><div class="score100" style="font-size:46px">${dueN}</div><div class="muted">due now</div></div></div></section>
+    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${cards.length}</div><div class="muted">in your review schedule</div></div>
+    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${mature}</div><div class="muted">well known (21+ day interval)</div></div>
+    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${dueN}</div><div class="muted">due now</div></div></div></section>
     ${hist ? `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:8px">Recent sessions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Score</th><th></th></tr></thead><tbody>${hist}</tbody></table></section>` : ''}`;
 }
 
 /* ================= events ================= */
 document.addEventListener('click', async e => {
+  if (!e.target.closest('#setpop, [data-act="settings"]')) closeSetPop();
   const t = e.target.closest('[data-act]'); if (!t) { if (sess && sess.navOpen && !e.target.closest('.navpop')) { sess.navOpen = false; render(); } return; }
   const a = t.dataset.act, i = +t.dataset.i;
   switch (a) {
+    case 'settings': toggleSetPop(); break;
+    case 'theme': setPref('bb_theme', t.dataset.k); renderSetPop(); break;
+    case 'font': setPref('bb_font', t.dataset.k); renderSetPop(); break;
+    case 'share': shareQuestion(); break;
     case 'menu': document.body.classList.toggle('menu'); break;
     case 'home': view = 'home'; render(); window.scrollTo(0, 0); break;
     case 'openexam': curExam = t.dataset.id; view = 'exam'; render(); window.scrollTo(0, 0); break;
@@ -1097,7 +1192,7 @@ document.addEventListener('click', async e => {
     case 'rmopt': collectDraft(); editing.options.splice(i, 1); if (editing.correct === i) editing.correct = 0; else if (editing.correct > i) editing.correct--; render(); break;
     case 'saveq': saveQuestion(); break;
     case 'cancelq': editing = null; render(); break;
-    case 'doaddexam': { const n = $('#newexam').value.trim(); if (!n) return toast('Write a name for the exam.'); state.exams.push({ id: uid(), name: n, passMark: 65 }); saveData(); render(); break; }
+    case 'doaddexam': { const n = $('#newexam').value.trim(); if (!n) return toast('Write a name for the exam.'); state.exams.push({ id: uid(), name: n, passMark: 65, category: guessCat(n) }); saveData(); render(); break; }
     case 'delexam': { const ex = examById(t.dataset.id), n = examQs(ex.id).length;
       if (await ask(`Delete "${ex.name}"${n ? ' and its ' + n + ' question' + (n === 1 ? '' : 's') : ''}? This cannot be undone.`, 'Delete')) {
         state.bank.filter(q => q.exam === ex.id).forEach(q => { if (q.stub) orphanDel.add(q.id); delete state.results[q.id]; delete state.cards[q.id]; });
@@ -1112,7 +1207,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('input', e => {
   const id = e.target.id;
-  if (id === 'bq') { bankQuery = e.target.value; bankLimit = 50; clearTimeout(bankTimer); bankTimer = setTimeout(renderBankList, 150); }
+  if (id === 'bq') { bankQuery = e.target.value; bankLimit = 50; clearTimeout(bankTimer); bankTimer = setTimeout(bankSearch, 350); }
   else if (id === 's-count') setup.count = e.target.value;
   else if (id === 's-h') setup.h = e.target.value;
   else if (id === 's-m') setup.m = e.target.value;
@@ -1121,9 +1216,10 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const id = e.target.id;
   if (id === 's-filter') { setup.filter = e.target.value; render(); }
-  else if (id === 'mexam') { manageExam = e.target.value; bankLimit = 50; render(); }
+  else if (id === 'mexam') { manageExam = e.target.value; bankLimit = 50; bankHits = null; render(); }
   else if (id === 'nm') { state.name = e.target.value.trim() || 'Doctor'; saveData(); renderSide(); }
   else if (id === 'file' && e.target.files[0]) { handleFile(e.target.files[0]); e.target.value = ''; }
+  else if (e.target.classList.contains('ex-cat')) { const ex = examById(e.target.closest('[data-eid]').dataset.eid); ex.category = e.target.value; saveData(); render(); }
   else if (e.target.classList.contains('ex-name')) {
     const row = e.target.closest('[data-eid]'), ex = examById(row.dataset.eid);
     ex.name = row.querySelector('.ex-name').value.trim() || ex.name; saveData(); renderSide();
@@ -1190,6 +1286,7 @@ $('#authf').addEventListener('submit', async e => {
   const { data } = await sb.auth.getSession();
   if (data.session) start(data.session);
 })();
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSetPop(); });
 </script>
 </body>
 </html>
