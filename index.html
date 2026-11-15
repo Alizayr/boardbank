@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<script>(function(){try{var t=localStorage.getItem("bb_theme")||"auto",f=localStorage.getItem("bb_font")||"m",d=document.documentElement;d.dataset.theme=(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light";d.dataset.font=f}catch(e){}})()</script>
+<meta name="theme-color" content="#3157d5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>(function(){try{if(location.hash.indexOf("#quiz=")===0)document.documentElement.className+=" sharedq"}catch(e){}try{var t=localStorage.getItem("bb_theme")||"auto",f=localStorage.getItem("bb_font")||"m",d=document.documentElement;d.dataset.theme=(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light";d.dataset.font=f}catch(e){}})()</script>
 <title>BoardBank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,6 +23,7 @@
   --hover:#f1f5f9; --soft:#f8fafc; --track:#e2e8f0; --faint:#94a3b8; --ink2:#334155; --ink3:#475569;
   --danger-line:#fecaca; --fc-bar:#c7d2fe; --heat0:#f1f5f9; --heat1:#dbe4ff; --heat2:#9bb3ff;
   --shadow:rgba(15,23,42,.1); --exp-line:rgba(15,23,42,.12); --scrim:rgba(15,23,42,.4); --veil:rgba(255,255,255,.7); --veil2:rgba(255,255,255,.8);
+  --hl0:#fff1a0; --hl1:#bdeccb; --hl2:#bcd9ff; --hl3:#ffc6dc; --hl4:#ffd8a6;
   --r:12px; --r-s:8px; --fz:1;
   --sans:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
@@ -30,8 +35,47 @@ html[data-theme=dark]{
   --amber:#f2b640; --amber-bg:#3a2e12; --amber-d:#f7d37a;
   --hover:#212a3e; --soft:#121826; --track:#2a3347; --faint:#6f7b93; --ink2:#c8d0e2; --ink3:#b3bdd2;
   --danger-line:#5a2528; --fc-bar:#33406b; --heat0:#212a3e; --heat1:#27386b; --heat2:#3f5bb8;
+  --hl0:rgba(250,204,21,.38); --hl1:rgba(52,211,153,.34); --hl2:rgba(96,165,250,.40); --hl3:rgba(244,114,182,.40); --hl4:rgba(251,146,60,.42);
   --shadow:rgba(0,0,0,.45); --exp-line:rgba(255,255,255,.16); --scrim:rgba(0,0,0,.6); --veil:rgba(255,255,255,.08); --veil2:rgba(14,19,29,.85);
 }
+.streakchip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 12px;border-radius:999px;background:var(--amber-bg);color:var(--amber-d);font-weight:600}
+.streakchip.off{background:var(--hover);color:var(--mute)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:20px}
+.kpi{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi .v{font:700 calc(30px * var(--fz))/1.1 var(--sans)} .kpi .l{color:var(--mute);margin-top:4px;font-size:calc(14px * var(--fz))}
+.delta{display:inline-block;margin-left:8px;font:600 calc(13px * var(--fz)) var(--sans);vertical-align:middle}
+.delta.up{color:var(--green-d)} .delta.down{color:var(--red)}
+.ins{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.ins:first-of-type{border-top:0}
+.ins .go{white-space:nowrap}
+.trow{padding:10px 0;border-top:1px solid var(--line)} .trow:first-of-type{border-top:0}
+.trow .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.tbar{height:8px;border-radius:99px;background:var(--track);overflow:hidden;margin:7px 0 4px}
+.tbar i{display:block;height:100%;border-radius:99px}
+.tbar .g{background:var(--green)} .tbar .a{background:var(--amber)} .tbar .r{background:var(--red)}
+.pchart{width:100%;height:auto;display:block}
+.pchart .bar{fill:var(--acc);opacity:.85} .pchart .bar.today{opacity:1} .pchart .bar.zero{fill:var(--track)}
+.pchart .ln{fill:none;stroke:var(--green);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.pchart .dot{fill:var(--green)} .pchart .grid{stroke:var(--line);stroke-width:1} .pchart text{fill:var(--mute);font:calc(11px * var(--fz)) var(--sans)}
+.pchart .spark{fill:none;stroke:var(--acc);stroke-width:2.5} .pchart .pm{stroke:var(--amber);stroke-dasharray:4 4}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--mute);font-size:calc(13px * var(--fz));margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px} @media (max-width:900px){.cols2{grid-template-columns:1fr}}
+.hl{color:inherit;border-radius:3px;padding:0 1px;cursor:pointer}
+.hl0{background:var(--hl0)} .hl1{background:var(--hl1)} .hl2{background:var(--hl2)} .hl3{background:var(--hl3)} .hl4{background:var(--hl4)}
+.hlhint{margin-top:8px}
+#hlbar{position:fixed;z-index:70;display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--surf);border:1px solid var(--line);border-radius:999px;box-shadow:0 8px 24px var(--shadow)}
+#hlbar[hidden]{display:none}
+#hlbar button{width:30px;height:30px;border-radius:50%;border:2px solid var(--surf);box-shadow:0 0 0 1px var(--line-2);padding:0;display:grid;place-items:center;color:var(--ink2)}
+#hlbar button.hle{background:var(--hover)}
+#sharepop{position:fixed;right:20px;bottom:88px;z-index:60;width:min(320px,calc(100vw - 32px));background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 12px 32px var(--shadow)}
+#sharepop[hidden]{display:none}
+#sharepop button{display:block;width:100%;text-align:left;border:0;background:none;border-radius:10px;padding:10px 12px;color:var(--ink)}
+#sharepop button:hover{background:var(--hover)} #sharepop button b{display:block} #sharepop button span{color:var(--mute);font-size:calc(13px * var(--fz))}
+.sharedq #auth{display:none!important}
+#sq{position:fixed;inset:0;overflow:auto;z-index:300;background:var(--bg);color:var(--ink)}
+.sq-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;max-width:760px;margin:0 auto}
+.sq-wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
 html[data-font=s]{--fz:.92} html[data-font=l]{--fz:1.12} html[data-font=xl]{--fz:1.25}
 *{box-sizing:border-box}
 html{color-scheme:light}
@@ -329,6 +373,7 @@ const LETTERS = 'ABCDEFGH';
 const KEY = 'qbank-v1';
 const DAY = 864e5;
 const IC = {
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
   share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
   book:'<path d="M3 5.5c2.5-1 5.5-1 9 1.5 3.5-2.5 6.5-2.5 9-1.5V19c-2.5-1-5.5-1-9 1.5C8.5 18 5.5 18 3 19z"/><path d="M12 7v13.5"/>',
@@ -351,7 +396,7 @@ const IC = {
 };
 const ic = (n, s = 20) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 
-let state = { bank: [], results: {}, history: [], exams: [], cards: {}, marks: {}, notes: {}, daily: {}, name: 'Ali' };
+let state = { bank: [], results: {}, history: [], exams: [], cards: {}, marks: {}, notes: {}, daily: {}, stat: {}, hl: {}, name: 'Ali' };
 let view = 'home', curExam = null, sess = null, timerId = null, editing = null;
 let setup = null, openTopics = {}, sortBy = 'name', manageTab = 'questions', manageExam = 'all', bankQuery = '', bankLimit = 50, bankTimer = null, persistWorks = true;
 
@@ -383,7 +428,7 @@ function renderSetPop() {
     <div class="sp-l">Text size</div>${seg(FONTS, f, 'font', 'Text size')}
     <hr><button class="nav" data-act="logout">${ic('close')}<span>Sign out</span></button>`;
 }
-function toggleSetPop() { const el = $('#setpop'); if (el && !el.hidden) closeSetPop(); else renderSetPop(); }
+function toggleSetPop() { closeSharePop(); const el = $('#setpop'); if (el && !el.hidden) closeSetPop(); else renderSetPop(); }
 const absUrl = u => /^(data:|https?:)/i.test(u) ? u : new URL(u, location.href).href;
 function questionText(q) {
   const L = 'ABCDEFGH', ex = examById(q.exam);
@@ -406,11 +451,245 @@ async function shareQuestion() {
   }
 }
 
+/* ================= streak, performance model, highlights, quiz sharing ================= */
+function streakInfo(daily = state.daily, nowMs = Date.now()) {
+  const days = Object.keys(daily).filter(k => daily[k] > 0).sort(), set = new Set(days);
+  const noon = ms => { const d = new Date(ms); d.setHours(12, 0, 0, 0); return d; };
+  const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const d = noon(nowMs), today = set.has(key(d));
+  if (!today) d.setDate(d.getDate() - 1);               // the streak is only broken once a whole day has passed without answers
+  let cur = 0; while (set.has(key(d))) { cur++; d.setDate(d.getDate() - 1); }
+  let best = 0, run = 0, prev = null;
+  for (const k of days) { const t = new Date(k + 'T12:00:00'); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; }
+  return { cur, best: Math.max(best, cur), today, atRisk: !today && cur > 0, total: days.length };
+}
+function streakChip() {
+  const si = streakInfo();
+  if (!si.cur) return `<div class="streakchip off">${ic('flame', 18)}<span>Answer a question today to start a streak</span></div>`;
+  return `<div class="streakchip" title="Best streak: ${si.best} days">${ic('flame', 18)}<span>${si.cur}-day streak${si.atRisk ? ' · answer today to keep it' : ''}</span></div>`;
+}
+function perfModel(nowMs = Date.now()) {
+  const byIdMap = new Map(state.bank.map(q => [q.id, q])), res = state.results, topics = {};
+  state.bank.forEach(q => qTags(q).forEach(t => { (topics[t] = topics[t] || { t, tot: 0, qa: 0, ok: 0, n: 0, c: 0 }).tot++; }));
+  let att = 0, cor = 0; const leech = [];
+  for (const id in res) {
+    const r = res[id], q = byIdMap.get(id); if (!q || !(r.attempts > 0)) continue;
+    att += r.attempts; cor += r.correct;
+    qTags(q).forEach(t => { const o = topics[t]; o.qa++; if (r.last) o.ok++; o.n += r.attempts; o.c += r.correct; });
+    if (r.attempts >= 2 && r.correct / r.attempts <= 0.5) leech.push({ id, miss: r.attempts - r.correct });
+  }
+  leech.sort((a, b) => b.miss - a.miss);
+  const list = Object.values(topics).map(o => ({ ...o, acc: o.qa ? o.ok / o.qa : null, cover: o.tot ? o.qa / o.tot : 0 }));
+  const ranked = list.filter(o => o.qa >= 5).sort((a, b) => a.acc - b.acc || b.n - a.n);
+  const weak = ranked.filter(o => o.acc < 0.8).slice(0, 6), weakSet = new Set(weak.map(o => o.t));
+  const strong = ranked.slice().reverse().filter(o => !weakSet.has(o.t)).slice(0, 4);
+  const fresh = list.filter(o => o.qa === 0 && o.tot >= 10).sort((a, b) => b.tot - a.tot).slice(0, 4);
+  const t0 = startOfDay(nowMs), days = [];
+  for (let d = 29; d >= 0; d--) { const k = dayKey(t0 - d * DAY), st = state.stat[k]; days.push({ k, n: state.daily[k] || 0, sn: st ? st.n : 0, sc: st ? st.c : 0, ms: st ? st.ms : 0, nt: st ? st.nt : 0 }); }
+  const sum = (a, f) => a.reduce((x, y) => x + f(y), 0);
+  const w1 = days.slice(23), w0 = days.slice(16, 23);
+  const wk = { n: sum(w1, x => x.n), sn: sum(w1, x => x.sn), sc: sum(w1, x => x.sc), ms: sum(w1, x => x.ms), nt: sum(w1, x => x.nt) };
+  const pw = { n: sum(w0, x => x.n), sn: sum(w0, x => x.sn), sc: sum(w0, x => x.sc) };
+  const wkAcc = wk.sn >= 10 ? wk.sc / wk.sn : null, pwAcc = pw.sn >= 10 ? pw.sc / pw.sn : null;
+  const exams = state.exams.map(e => { const sx = statsOf(examQs(e.id)); return { id: e.id, name: e.name, pass: e.passMark || 65, total: sx.total, att: sx.att, acc: sx.att ? sx.cor / sx.att : null, cover: sx.total ? sx.att / sx.total : 0 }; });
+  return { att, cor, acc: att ? cor / att : null, topics: list, weak, strong, fresh, leech, days, wk, pw, wkAcc, pwAcc, avgMs: wk.nt ? wk.ms / wk.nt : null, exams, streak: streakInfo(state.daily, nowMs), sessions: state.history.slice(-20) };
+}
+const pctS = v => v == null ? '–' : Math.round(100 * v) + '%';
+const barCls = v => v >= 0.75 ? 'g' : v >= 0.55 ? 'a' : 'r';
+function activityChart(days) {
+  const W = 640, H = 150, L = 28, B = 22, T = 10, ch = H - B - T, bw = (W - L) / days.length, mx = Math.max(10, ...days.map(d => d.n));
+  const bars = days.map((d, i) => { const h = d.n ? Math.max(3, Math.round(ch * d.n / mx)) : 3, x = L + i * bw + 2;
+    const accTxt = d.sn ? `, ${Math.round(100 * d.sc / d.sn)}% correct` : '';
+    return `<rect class="bar ${d.n ? '' : 'zero'} ${i === days.length - 1 ? 'today' : ''}" x="${x.toFixed(1)}" y="${T + ch - h}" width="${(bw - 4).toFixed(1)}" height="${h}" rx="3"><title>${d.k}: ${d.n} answered${accTxt}</title></rect>`; }).join('');
+  const pts = days.map((d, i) => d.sn >= 3 ? [L + i * bw + bw / 2, T + ch - ch * d.sc / d.sn] : null);
+  const line = pts.filter(Boolean).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), dots = pts.filter(Boolean).map(p => `<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"/>`).join('');
+  const lab = [0, 7, 14, 21, 29].map(i => `<text x="${(L + i * bw + bw / 2).toFixed(1)}" y="${H - 5}" text-anchor="${i === 0 ? 'start' : i === 29 ? 'end' : 'middle'}">${new Date(days[i].k + 'T12:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short' })}</text>`).join('');
+  return `<svg class="pchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Questions answered per day over the last 30 days"><line class="grid" x1="${L}" x2="${W}" y1="${T}" y2="${T}"/><line class="grid" x1="${L}" x2="${W}" y1="${T + ch}" y2="${T + ch}"/><text x="0" y="${T + 9}">${mx}</text><text x="0" y="${T + ch}">0</text>${bars}${line.includes(' ') ? `<polyline class="ln" points="${line}"/>` : ''}${dots}${lab}</svg>`;
+}
+function sparkline(sessions, pass) {
+  const W = 640, H = 90, L = 28, T = 8, B = 16, ch = H - T - B; if (sessions.length < 2) return '';
+  const pts = sessions.map((h, i) => [L + (W - L - 8) * i / (sessions.length - 1), T + ch - ch * (h.total ? h.correct / h.total : 0)]);
+  return `<svg class="pchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Score of your last sessions"><line class="grid" x1="${L}" x2="${W}" y1="${T}" y2="${T}"/><line class="grid" x1="${L}" x2="${W}" y1="${T + ch}" y2="${T + ch}"/><line class="pm" x1="${L}" x2="${W}" y1="${T + ch - ch * pass / 100}" y2="${T + ch - ch * pass / 100}"/><text x="0" y="${T + 9}">100</text><text x="0" y="${T + ch}">0</text><polyline class="spark" points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}"/>${pts.map(p => `<circle class="dot" style="fill:var(--acc)" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3"/>`).join('')}<text x="${L}" y="${H - 2}">older</text><text x="${W - 8}" y="${H - 2}" text-anchor="end">latest</text></svg>`;
+}
+function topicRows(list, kind) {
+  return list.map(o => `<div class="trow"><div class="top"><b dir="auto">${esc(o.t)}</b><span class="muted sm">${pctS(o.acc)} correct · ${o.qa}/${o.tot} answered</span></div><div class="tbar"><i class="${barCls(o.acc)}" style="width:${Math.round(100 * o.acc)}%"></i></div>${kind === 'weak' ? `<button class="ghost" style="padding:5px 12px" data-act="practice" data-kind="topic" data-k="${esc(o.t)}">Practise this topic</button>` : ''}</div>`).join('');
+}
+function renderStats() {
+  const m = perfModel(), si = m.streak;
+  if (!m.att && !si.total) return `<h1 class="title">Performance</h1><div class="card empty" style="margin-top:20px"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">No results yet</h2><p style="margin:8px 0 0">Answer a few questions and your analysis, streak and weak topics will appear here.</p></div>`;
+  const cards = Object.keys(state.cards).filter(id => byId(id)), dueN = duePool().length, mature = cards.filter(id => state.cards[id].interval >= 21).length;
+  const dlt = (a, b) => a == null || b == null || Math.round(100 * (a - b)) === 0 ? '' : `<span class="delta ${a > b ? 'up' : 'down'}">${a > b ? '▲' : '▼'} ${Math.abs(Math.round(100 * (a - b)))}%</span>`;
+  const dn = m.wk.n - m.pw.n, dnS = m.pw.n && dn ? `<span class="delta ${dn > 0 ? 'up' : 'down'}">${dn > 0 ? '▲' : '▼'} ${Math.abs(dn)}</span>` : '';
+  const kpis = `<div class="kpis">
+    <div class="kpi"><div class="v">${pctS(m.acc)}${dlt(m.wkAcc, m.pwAcc)}</div><div class="l">${m.cor} of ${m.att} answers correct${m.wkAcc != null ? ` · ${pctS(m.wkAcc)} this week` : ''}</div></div>
+    <div class="kpi"><div class="v">${m.wk.n}${dnS}</div><div class="l">answered in the last 7 days</div></div>
+    <div class="kpi"><div class="v">${m.avgMs ? Math.round(m.avgMs / 1000) + ' s' : '–'}</div><div class="l">${m.avgMs ? 'average per question (7 days)' : 'average time per question (tracked from now on)'}</div></div>
+    <div class="kpi"><div class="v" style="display:flex;align-items:center;gap:8px;color:${si.cur ? 'var(--amber-d)' : 'inherit'}">${ic('flame', 26)}${si.cur}<span class="muted sm" style="font-weight:500">day${si.cur === 1 ? '' : 's'}</span></div><div class="l">${si.atRisk ? 'Answer today to keep your streak' : si.cur ? 'current streak' : 'no active streak'} · best ${si.best}</div></div></div>`;
+  const ins = [];
+  if (si.atRisk) ins.push({ t: `You are on a ${si.cur}-day streak. Answer one question today to keep it alive.` });
+  else if (si.cur >= 3) ins.push({ t: `${si.cur} days in a row. Keep it going.` });
+  if (m.weak[0]) ins.push({ t: `Weakest topic: <b dir="auto">${esc(m.weak[0].t)}</b>. ${pctS(m.weak[0].acc)} of the ${m.weak[0].qa} questions you answered there are currently correct.`, go: ['Practise', 'topic', m.weak[0].t] });
+  if (m.leech.length >= 5) ins.push({ t: `You keep missing <b>${m.leech.length}</b> questions (answered at least twice, half or less correct).`, go: ['Practise these', 'leech', ''] });
+  if (m.wkAcc != null && m.pwAcc != null && Math.abs(m.wkAcc - m.pwAcc) >= 0.03) ins.push({ t: m.wkAcc > m.pwAcc ? `Your accuracy is up ${Math.round(100 * (m.wkAcc - m.pwAcc))} points on the week before.` : `Your accuracy dropped ${Math.round(100 * (m.pwAcc - m.wkAcc))} points on the week before. A short review of weak topics can help.` });
+  const lowCover = m.exams.filter(e => e.total >= 100 && e.cover < 0.15).sort((a, b) => b.total - a.total)[0];
+  if (lowCover) ins.push({ t: `You have covered only ${Math.round(100 * lowCover.cover)}% of <b dir="auto">${esc(lowCover.name)}</b>. New questions there will raise your coverage.` });
+  if (m.strong[0]) ins.push({ t: `Strongest topic: <b dir="auto">${esc(m.strong[0].t)}</b> (${pctS(m.strong[0].acc)}).` });
+  const insHtml = ins.length ? `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:4px">What to do next</h3>${ins.slice(0, 5).map(i => `<div class="ins"><div>${i.t}</div>${i.go ? `<button class="btn go" data-act="practice" data-kind="${i.go[1]}" data-k="${esc(i.go[2])}">${i.go[0]}</button>` : ''}</div>`).join('')}</section>` : '';
+  const chart = `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:8px">Last 30 days</h3>${activityChart(m.days)}<div class="legend"><span><i style="background:var(--acc)"></i>Questions per day</span><span><i style="background:var(--green)"></i>Accuracy that day (needs 3+ answers)</span></div></section>`;
+  const weakHtml = `<section class="card"><h3 style="margin-bottom:4px">Needs work</h3>${m.weak.length ? topicRows(m.weak, 'weak') : '<p class="muted">No weak topics yet. Topics appear here after 5 answered questions.</p>'}${m.leech.length ? `<div style="margin-top:12px"><button class="ghost" data-act="practice" data-kind="leech" data-k="">Practise the ${Math.min(m.leech.length, 20)} questions you miss most</button></div>` : ''}</section>`;
+  const strongHtml = `<section class="card"><h3 style="margin-bottom:4px">Strongest</h3>${m.strong.length ? topicRows(m.strong, 'strong') : '<p class="muted">Answer more questions to see your strengths.</p>'}${m.fresh.length ? `<h3 style="margin:18px 0 4px">Not started</h3>${m.fresh.map(o => `<div class="trow"><div class="top"><b dir="auto">${esc(o.t)}</b><span class="muted sm">${o.tot} questions</span></div></div>`).join('')}` : ''}</section>`;
+  const exRows = m.exams.filter(e => e.total).map(e => { const lowData = e.att < 20, ok = e.acc != null && e.acc * 100 >= e.pass;
+    return `<div class="trow"><div class="top"><b dir="auto">${esc(e.name)}</b><span class="muted sm">${pctS(e.acc)} correct · ${Math.round(100 * e.cover)}% covered (${e.att}/${e.total})</span></div><div class="tbar"><i class="${e.acc == null ? 'a' : barCls(e.acc)}" style="width:${Math.round(100 * (e.acc || 0))}%"></i></div><span class="muted sm">${lowData ? 'Answer at least 20 questions for a reliable estimate.' : ok ? `Above the ${e.pass}% pass mark` : `${Math.round(e.pass - 100 * e.acc)} points below the ${e.pass}% pass mark`}</span></div>`; }).join('');
+  const hist = state.history.slice(-10).reverse().map(h => `<tr><td>${new Date(h.at).toLocaleString()}</td><td>${h.kind === 'review' ? 'Review' : h.mode === 'tutor' ? 'Tutor' : 'Exam'}</td><td>${h.correct}/${h.total}</td><td>${Math.round(100 * h.correct / h.total)}%</td></tr>`).join('');
+  const passAvg = Math.round(m.exams.filter(e => e.total).reduce((a, e) => a + e.pass, 0) / Math.max(1, m.exams.filter(e => e.total).length)) || 65;
+  return `<h1 class="title">Performance</h1>${kpis}${insHtml}${chart}
+    <div class="cols2" style="margin-top:20px">${weakHtml}${strongHtml}</div>
+    ${exRows ? `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:4px">Exam readiness</h3>${exRows}</section>` : ''}
+    <section class="card" style="margin-top:20px"><div class="row" style="gap:40px;flex-wrap:wrap"><div><div class="score100" style="font-size:calc(40px * var(--fz))">${cards.length}</div><div class="muted">in your review schedule</div></div><div><div class="score100" style="font-size:calc(40px * var(--fz))">${mature}</div><div class="muted">well known (21+ day interval)</div></div><div><div class="score100" style="font-size:calc(40px * var(--fz))">${dueN}</div><div class="muted">due now</div></div></div></section>
+    ${hist ? `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:8px">Recent sessions</h3>${sparkline(m.sessions, passAvg)}<div class="legend"><span><i style="background:var(--acc)"></i>Session score</span><span><i style="background:var(--amber)"></i>Pass mark</span></div><table><thead><tr><th>Date</th><th>Type</th><th>Score</th><th></th></tr></thead><tbody>${hist}</tbody></table></section>` : ''}`;
+}
+function startPractice(kind, key) {
+  const m = perfModel(), res = state.results; let pool;
+  if (kind === 'leech') { const set = new Set(m.leech.slice(0, 20).map(x => x.id)); pool = state.bank.filter(q => set.has(q.id)); }
+  else pool = state.bank.filter(q => qTags(q).includes(key) && !(res[q.id] && res[q.id].last));
+  if (!pool.length) return toast('Nothing left to practise here. Great work.');
+  const wrong = shuffle(pool.filter(q => res[q.id] && res[q.id].attempts > 0)), fresh = shuffle(pool.filter(q => !(res[q.id] && res[q.id].attempts > 0)));
+  const ids = [...wrong, ...fresh].slice(0, 20).map(q => q.id);
+  beginSession(ids, 'tutor', 'study', 0, (byId(ids[0]) || {}).exam || curExam);
+}
+
+/* ---- highlights in the explanation ---- */
+const HLC = ['Yellow', 'Green', 'Blue', 'Pink', 'Orange'];
+const hlText = qid => { const q = byId(qid); return q ? noImg(q.explanation) : ''; };
+function hlList(qid, text) { return (state.hl[qid] || []).filter(h => h[0] < h[1] && h[1] <= text.length && text.slice(h[0], h[1]) === h[3]).sort((a, b) => a[0] - b[0]); }
+function hlHtml(qid, text) {
+  let out = '', pos = 0;
+  for (const [a, b, c] of hlList(qid, text)) { if (a < pos) continue; out += esc(text.slice(pos, a)) + `<mark class="hl hl${c}">${esc(text.slice(a, b))}</mark>`; pos = b; }
+  return out + esc(text.slice(pos));
+}
+function hlSet(qid, text, a, b, c) {                    // c: colour 0-4, or -1 to erase
+  const out = [];
+  for (const h of hlList(qid, text)) {
+    if (h[1] <= a || h[0] >= b) { out.push(h); continue; }
+    if (h[0] < a) out.push([h[0], a, h[2], text.slice(h[0], a)]);
+    if (h[1] > b) out.push([b, h[1], h[2], text.slice(b, h[1])]);
+  }
+  if (c >= 0 && b > a) out.push([a, b, c, text.slice(a, b)]);
+  out.sort((x, y) => x[0] - y[0]);
+  const merged = []; for (const h of out) { const l = merged[merged.length - 1]; if (l && l[2] === h[2] && l[1] === h[0]) { l[1] = h[1]; l[3] = text.slice(l[0], l[1]); } else merged.push(h.slice()); }
+  if (merged.length) state.hl[qid] = merged; else delete state.hl[qid];
+}
+function hlSelection() {
+  const sel = window.getSelection && getSelection(); if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+  const r = sel.getRangeAt(0), n = r.commonAncestorContainer, el = n.nodeType === 1 ? n : n.parentElement, host = el && el.closest('[data-hl]');
+  if (!host) return null;
+  const pre = document.createRange(); pre.selectNodeContents(host); pre.setEnd(r.startContainer, r.startOffset);
+  let a = pre.toString().length, b = a + r.toString().length; const full = host.textContent;
+  while (a < b && /\s/.test(full[a])) a++; while (b > a && /\s/.test(full[b - 1])) b--;
+  return b > a ? { qid: host.dataset.hl, a, b, host, rect: r.getBoundingClientRect() } : null;
+}
+let hlSel = null, hlTimer = null;
+function hideHlBar() { const el = $('#hlbar'); if (el) el.hidden = true; hlSel = null; }
+function showHlBar() {
+  hlSel = hlSelection(); if (!hlSel) return hideHlBar();
+  let bar = $('#hlbar');
+  if (!bar) {
+    bar = document.createElement('div'); bar.id = 'hlbar'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Highlight colours');
+    bar.innerHTML = HLC.map((n, i) => `<button class="hl${i}" data-hlc="${i}" aria-label="Highlight ${n}" title="${n}"></button>`).join('') + `<button class="hle" data-hlc="-1" aria-label="Remove highlight" title="Remove highlight">${ic('close', 16)}</button>`;
+    document.body.appendChild(bar);
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(ev => bar.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+    bar.addEventListener('click', e => { const t = e.target.closest('[data-hlc]'); if (!t || !hlSel) return; applyHl(hlSel, +t.dataset.hlc); });
+  }
+  bar.hidden = false;
+  const r = hlSel.rect, w = bar.offsetWidth || 240, x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  bar.style.left = x + 'px'; bar.style.top = Math.max(8, r.top > 70 ? r.top - 54 : r.bottom + 14) + 'px';
+}
+function applyHl(sel, c) {
+  hlSet(sel.qid, hlText(sel.qid), sel.a, sel.b, c); saveSoon();
+  const q = byId(sel.qid); sel.host.innerHTML = hlHtml(sel.qid, hlText(sel.qid)) + imgHtml(q ? q.explanation : '');
+  getSelection().removeAllRanges(); hideHlBar();
+}
+document.addEventListener('selectionchange', () => { clearTimeout(hlTimer); hlTimer = setTimeout(showHlBar, 160); });
+window.addEventListener('scroll', () => { if (hlSel) showHlBar(); }, { passive: true });
+
+/* ---- share a question as a quiz link (works without an account) ---- */
+const b64u = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = t => { const b = atob(t.replace(/-/g, '+').replace(/_/g, '/')), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+async function pipeBytes(Ctor, bytes) { const st = new Ctor('deflate-raw'), w = st.writable.getWriter(); w.write(bytes); w.close(); return new Uint8Array(await new Response(st.readable).arrayBuffer()); }
+async function packQuiz(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (typeof CompressionStream !== 'undefined') { try { return 'z' + b64u(await pipeBytes(CompressionStream, bytes)); } catch (e) {} }
+  return 'u' + b64u(bytes);
+}
+async function unpackQuiz(str) {
+  const raw = unb64u(str.slice(1));
+  if (str[0] === 'z') { if (typeof DecompressionStream === 'undefined') throw new Error('unsupported'); return JSON.parse(new TextDecoder().decode(await pipeBytes(DecompressionStream, raw))); }
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+function quizPayload(q) {
+  const safe = t => String(t || '').replace(/\[\[img:([^\]\s]+)\]\]/g, (m, u) => /^[\w.\/-]+$/.test(u) ? m : '').trim(), ex = examById(q.exam), tag = qTags(q)[0];
+  return { v: 1, n: ex ? ex.name : '', g: tag === 'Untagged' ? '' : tag, s: safe(q.stem), o: q.options.map(o => o.text), c: q.correct, x: safe(q.explanation) };
+}
+function cleanQuiz(d) {
+  if (!d || typeof d !== 'object' || typeof d.s !== 'string' || !Array.isArray(d.o) || d.o.length < 2 || d.o.length > 8 || !Number.isInteger(d.c) || d.c < 0 || d.c >= d.o.length) throw new Error('bad quiz');
+  const str = (t, n) => String(t == null ? '' : t).slice(0, n), safe = t => str(t, 8000).replace(/\[\[img:([^\]\s]+)\]\]/g, (m, u) => /^[\w.\/-]+$/.test(u) ? m : '');
+  return { n: str(d.n, 120), g: str(d.g, 120), s: safe(d.s), o: d.o.map(x => str(x, 600)), c: d.c, x: safe(d.x) };
+}
+async function copyText(text, msg) {
+  try { await navigator.clipboard.writeText(text); toast(msg); return; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast(msg); } catch (_) { toast('Could not copy.'); } ta.remove();
+}
+async function shareQuiz() {
+  const q = cur(); if (!q || q.stub) return;
+  const url = location.origin + location.pathname + '#quiz=' + await packQuiz(quizPayload(q));
+  if (navigator.share) { try { await navigator.share({ title: 'Can you answer this question?', text: 'Try this BoardBank question:', url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  copyText(url, 'Quiz link copied. Anyone can open it and answer, no account needed.');
+}
+function closeSharePop() { const el = $('#sharepop'); if (el) el.hidden = true; }
+function toggleSharePop() {
+  closeSetPop(); let el = $('#sharepop');
+  if (!el) { el = document.createElement('div'); el.id = 'sharepop'; el.hidden = true; document.body.appendChild(el); }
+  if (!el.hidden) return closeSharePop();
+  el.innerHTML = `<button data-act="sharequiz"><b>Share as a quiz</b><span>A link. Others answer first, then see the explanation. No account needed.</span></button><button data-act="sharetext"><b>Copy question and answer</b><span>Plain text with the correct answer and explanation.</span></button>`;
+  el.hidden = false;
+}
+const isQuizLink = () => location.hash.indexOf('#quiz=') === 0;
+async function openSharedQuiz() {
+  document.documentElement.classList.add('sharedq'); const au = $('#auth'); if (au) au.hidden = true; document.title = 'BoardBank - shared question';
+  const box = document.createElement('div'); box.id = 'sq'; document.body.appendChild(box);
+  let d; try { d = cleanQuiz(await unpackQuiz(location.hash.slice(6))); }
+  catch (e) { box.innerHTML = `<div class="sq-top"><span class="brand" style="font-size:calc(20px * var(--fz))">BoardBank</span></div><div class="sq-wrap"><section class="card"><h3>This link can not be opened</h3><p class="muted">It may be incomplete or your browser is too old. Ask the sender to share the question again.</p><button class="btn" data-sq="open">Open BoardBank</button></section></div>`; box.onclick = ev => { if (ev.target.closest('[data-sq=open]')) location.href = location.pathname; }; return; }
+  let chosen = -1, done = false;
+  const { v, q: qq } = splitStem(d.s);
+  const draw = () => {
+    const opts = d.o.map((t, i) => done
+      ? `<div class="ocard ${i === d.c ? 'good' : i === chosen ? 'bad' : ''}"><div class="ohead">${ic(i === d.c ? 'check' : i === chosen ? 'x' : 'info', 24)}<span class="t" dir="auto">${esc(t)}</span>${i === d.c ? '<span class="tagc" style="color:var(--green-d)">Correct answer</span>' : i === chosen ? '<span class="tagc" style="color:var(--red)">Your answer</span>' : ''}</div></div>`
+      : `<div class="opt ${i === chosen ? 'sel' : ''}" data-sq="pick" data-i="${i}" tabindex="0" role="radio" aria-checked="${i === chosen}" aria-label="Choice ${'ABCDEFGH'[i]}"><span class="radio"></span><span class="txt" dir="auto">${esc(t)}</span></div>`).join('');
+    const verdict = chosen === d.c ? 'Correct.' : `Incorrect. The correct answer is ${'ABCDEFGH'[d.c]}.`;
+    box.innerHTML = `<div class="sq-top"><span class="brand" style="font-size:calc(20px * var(--fz))">BoardBank</span><button class="ghost" data-sq="open">Open BoardBank</button></div><div class="sq-wrap">
+      <p class="muted sm" style="margin:0 0 10px">${esc([d.n, d.g].filter(Boolean).join(' · '))}</p>
+      <section class="qcard">${v ? `<p class="vig" dir="auto">${esc(v)}</p>` : ''}<p class="qq" dir="auto">${esc(qq)}</p>${imgHtml(d.s)}
+        <div role="radiogroup" aria-label="Answer choices">${opts}</div>
+        ${done ? '' : `<button class="submit" data-sq="submit" ${chosen < 0 ? 'disabled' : ''}>Submit answer</button>`}</section>
+      ${done ? `<section class="kf" style="margin-top:20px"><h3>${ic('link', 26)}<span dir="auto">${esc(d.g || d.n || 'Explanation')}</span></h3><p class="muted sm" style="margin:-6px 0 10px">${verdict}</p>${d.x ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(noImg(d.x))}${imgHtml(d.x)}</div>` : '<p class="muted">No explanation was provided for this question.</p>'}</section>
+        <section class="card" style="margin-top:20px"><h3>Want more questions like this?</h3><p class="muted" style="margin:6px 0 14px">Open BoardBank to practise board-style questions with spaced repetition.</p><button class="btn" data-sq="open">Open BoardBank</button></section>` : ''}</div>`;
+  };
+  box.addEventListener('click', ev => {
+    const t = ev.target.closest('[data-sq]'); if (!t) return;
+    if (t.dataset.sq === 'open') location.href = location.pathname;
+    else if (t.dataset.sq === 'pick' && !done) { chosen = +t.dataset.i; draw(); }
+    else if (t.dataset.sq === 'submit' && chosen >= 0) { done = true; draw(); box.scrollTop = 0; }
+  });
+  box.addEventListener('keydown', ev => { const t = ev.target.closest && ev.target.closest('[data-sq=pick]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); t.click(); } });
+  draw();
+}
+
 /* ================= storage (Supabase) ================= */
 const sb = window.supabase.createClient('https://vlrgorcmrlugvipsvdjs.supabase.co', 'sb_publishable_4mQXmAzgM-RF69GHY2d9VA_MKLpzccT');
 const orphanDel = new Set(); let hydrateBusy = false;
 let loadErr = '', me = null, isAdmin = false, loaded = false, synced = { e: new Map(), q: new Map() };
-const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'name', 'named'];
+const UD = ['results', 'history', 'cards', 'marks', 'notes', 'daily', 'stat', 'hl', 'name', 'named'];
 const eRow = e => catCol ? ({ id: e.id, name: e.name, pass_mark: e.passMark, category: catOf(e) }) : ({ id: e.id, name: e.name, pass_mark: e.passMark });
 const qRow = q => ({ id: q.id, exam_id: q.exam, stem: q.stem, options: q.options, correct: q.correct, explanation: q.explanation || '', objective: q.objective || '', hint: q.hint || '', tags: q.tags || [], difficulty: q.difficulty || 'Medium' });
 const mapSnap = (rows) => new Map(rows.map(r => [r.id, JSON.stringify(r)]));
@@ -533,6 +812,8 @@ const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveDat
 function migrate() {
   state.exams = state.exams || []; state.cards = state.cards || {}; state.marks = state.marks || {};
   state.notes = state.notes || {}; state.daily = state.daily || {}; state.results = state.results || {}; state.history = state.history || [];
+  state.stat = state.stat || {}; state.hl = state.hl || {};
+  { const cut = dayKey(Date.now() - 400 * DAY); Object.keys(state.stat).forEach(k => { if (k < cut) delete state.stat[k]; }); }
   if (!state.exams.length) state.exams.push({ id: uid(), name: 'Internal Medicine', passMark: 65, category: 'Internal Medicine' });
   state.bank.forEach(q => { if (!q.exam || !state.exams.find(e => e.id === q.exam)) q.exam = state.exams[0].id; });
 }
@@ -701,6 +982,7 @@ function renderHome() {
   const exSections = catList().map(([c, exs]) => `<h2 class="sec">${esc(c)} <span class="muted sm">· ${exs.length} source${exs.length === 1 ? '' : 's'}</span></h2><div class="exgrid">${exs.map(exCard).join('')}</div>`).join('');
   return `<section class="card hero"><div>
       <div class="muted">${new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+      ${streakChip()}
       <h1>${n ? 'Time to review' : 'You are all caught up'}</h1>
       <div class="row" style="gap:22px;margin-top:14px"><div class="big">${n}</div><div class="muted">question${n === 1 ? '' : 's'} due for review.<br>${n ? 'Answer, then rate how hard it was.' : 'New questions are in your exams.'}</div></div>
       <div class="row" style="margin-top:20px"><button class="btn" data-act="review" ${n ? '' : 'disabled'}>Start review</button></div>
@@ -825,6 +1107,7 @@ function renderSession() {
   const q0 = cur();
   if (q0 && q0.stub) { loadCur(q0.id); return `<section class="card" style="margin-top:20px"><p class="muted" style="margin:0">Loading this question…</p></section>`; }
   const q = cur(), rev = revealed(q), chosen = sess.ans[q.id], ok = chosen === q.correct;
+  (sess.shown = sess.shown || {})[q.id] = sess.shown[q.id] || Date.now();
   const hideScore = sess.mode === 'exam' && !sess.review;
   const { v, q: qq } = splitStem(q.stem);
   const total = sess.ids.length;
@@ -857,7 +1140,7 @@ function renderSession() {
     const verdict = chosen === undefined ? 'Not answered' : ok ? 'Correct' : 'Incorrect';
     after = `<section class="kf"><h3>${ic('link', 26)}<span dir="auto">${esc(topic)}</span></h3>
       <p class="muted sm" style="margin:-6px 0 10px">${verdict}. The correct answer is ${LETTERS[q.correct]}.</p>
-      <div class="${open || !kfLong ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto">${esc(noImg(q.explanation))}${imgHtml(q.explanation)}</div>` : ''}</div>
+      <div class="${open || !kfLong ? '' : 'clamp'}">${q.objective ? `<h4>Key facts</h4><div class="keyline" dir="auto">${esc(q.objective)}</div>` : ''}${q.explanation ? `<h4>Explanation</h4><div class="body" dir="auto" data-hl="${q.id}">${hlHtml(q.id, noImg(q.explanation))}${imgHtml(q.explanation)}</div>${state.hl[q.id] ? '' : '<div class="muted sm hlhint">Tip: select any text to highlight it.</div>'}` : ''}</div>
       ${kfLong ? `<button class="more" data-act="kf">${open ? 'See less' : 'See more'} ${ic('down', 18)}</button>` : ''}</section>
       <section class="rate" aria-live="polite"><h3>${ok ? 'How hard was this question?' : 'Scheduled to repeat'}</h3>
       ${ok ? `<p class="muted sm">This decides when you will see it again. If you skip, Medium is used. Shortcuts: 1, 2, 3.</p>
@@ -907,10 +1190,13 @@ function renderFab() {
 }
 function goTo(i) { autoRate(); sess.idx = i; sess.navOpen = false; sess.visited[sess.ids[i]] = 1; render(); window.scrollTo(0, 0); }
 function pick(i) { const q = cur(); if (revealed(q)) return; sess.ans[q.id] = i; render(); }
-function record(q, ok) {
+function record(q, ok, ms) {
   const r = state.results[q.id] || { attempts: 0, correct: 0, skipped: 0 };
   r.attempts++; if (ok) r.correct++; r.last = ok; r.at = Date.now(); state.results[q.id] = r;
-  const k = dayKey(Date.now()); state.daily[k] = (state.daily[k] || 0) + 1;
+  const k = dayKey(Date.now()), first = !state.daily[k]; state.daily[k] = (state.daily[k] || 0) + 1;
+  const st = state.stat[k] || (state.stat[k] = { n: 0, c: 0, ms: 0, nt: 0 });
+  st.n++; if (ok) st.c++; if (ms > 0) { st.ms += ms; st.nt++; }
+  if (first) setTimeout(() => { const si = streakInfo(); if (si.cur >= 2) toast(`${si.cur}-day streak! Keep it going.`); }, 700);
 }
 function schedule(q, rating) {
   if (!sess.prev[q.id]) sess.prev[q.id] = JSON.parse(JSON.stringify(getCard(q.id)));
@@ -922,7 +1208,7 @@ function autoRate() {
 }
 function submitAnswer() {
   const q = cur(); if (sess.ans[q.id] === undefined || sess.sub[q.id]) return;
-  sess.sub[q.id] = true; const ok = sess.ans[q.id] === q.correct; record(q, ok);
+  sess.sub[q.id] = true; const ok = sess.ans[q.id] === q.correct; record(q, ok, Math.min(180000, Date.now() - ((sess.shown && sess.shown[q.id]) || Date.now())));
   if (!ok) schedule(q, 'again'); saveData(); render();
 }
 function rate(r) {
@@ -1125,30 +1411,21 @@ async function handleFile(file) {
 }
 
 /* ================= performance ================= */
-function renderStats() {
-  const ids = Object.keys(state.results).filter(id => byId(id) && state.results[id].attempts > 0);
-  const att = ids.reduce((s, id) => s + state.results[id].attempts, 0), cor = ids.reduce((s, id) => s + state.results[id].correct, 0);
-  const cards = Object.keys(state.cards).filter(id => byId(id)), dueN = duePool().length;
-  const mature = cards.filter(id => state.cards[id].interval >= 21).length;
-  const hist = state.history.slice(-10).reverse().map(h => `<tr><td>${new Date(h.at).toLocaleString()}</td><td>${h.kind === 'review' ? 'Review' : h.mode === 'tutor' ? 'Tutor' : 'Exam'}</td><td>${h.correct}/${h.total}</td><td>${Math.round(100 * h.correct / h.total)}%</td></tr>`).join('');
-  if (!att) return `<h1 class="title">Performance</h1><div class="card empty" style="margin-top:20px"><h2 style="font:600 calc(22px * var(--fz)) var(--sans)">No results yet</h2><p style="margin:8px 0 0">Finish a session to see your performance here.</p></div>`;
-  return `<h1 class="title">Performance</h1><section class="card" style="margin-top:20px"><div class="row" style="gap:44px"><div><div class="score100">${Math.round(100 * cor / att)}%</div><div class="muted">${cor} of ${att} answers correct</div></div>
-    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${cards.length}</div><div class="muted">in your review schedule</div></div>
-    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${mature}</div><div class="muted">well known (21+ day interval)</div></div>
-    <div><div class="score100" style="font-size:calc(46px * var(--fz))">${dueN}</div><div class="muted">due now</div></div></div></section>
-    ${hist ? `<section class="card" style="margin-top:20px"><h3 style="margin-bottom:8px">Recent sessions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Score</th><th></th></tr></thead><tbody>${hist}</tbody></table></section>` : ''}`;
-}
-
 /* ================= events ================= */
 document.addEventListener('click', async e => {
   if (!e.target.closest('#setpop, [data-act="settings"]')) closeSetPop();
+  if (!e.target.closest('#sharepop, [data-act="share"]')) closeSharePop();
+  { const mk = e.target.closest('mark.hl'); if (mk && getSelection().isCollapsed) { const r = document.createRange(); r.selectNodeContents(mk); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } }
   const t = e.target.closest('[data-act]'); if (!t) { if (sess && sess.navOpen && !e.target.closest('.navpop')) { sess.navOpen = false; render(); } return; }
   const a = t.dataset.act, i = +t.dataset.i;
   switch (a) {
     case 'settings': toggleSetPop(); break;
     case 'theme': setPref('bb_theme', t.dataset.k); renderSetPop(); break;
     case 'font': setPref('bb_font', t.dataset.k); renderSetPop(); break;
-    case 'share': shareQuestion(); break;
+    case 'share': toggleSharePop(); break;
+    case 'sharequiz': closeSharePop(); shareQuiz(); break;
+    case 'sharetext': closeSharePop(); shareQuestion(); break;
+    case 'practice': startPractice(t.dataset.kind, t.dataset.k); break;
     case 'menu': document.body.classList.toggle('menu'); break;
     case 'home': view = 'home'; render(); window.scrollTo(0, 0); break;
     case 'openexam': curExam = t.dataset.id; view = 'exam'; render(); window.scrollTo(0, 0); break;
@@ -1283,10 +1560,13 @@ $('#authf').addEventListener('submit', async e => {
   }
 });
 (async function () {
+  if (isQuizLink()) { openSharedQuiz(); return; }
   const { data } = await sb.auth.getSession();
   if (data.session) start(data.session);
 })();
+window.addEventListener('hashchange', () => { if (isQuizLink() || $('#sq')) location.reload(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSetPop(); });
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
 </body>
 </html>
