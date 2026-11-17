@@ -1182,7 +1182,7 @@ function renderSession() {
 function renderFab() {
   const q = cur(); if (!q) return '';
   return `<div class="fab" role="toolbar" aria-label="Question tools">
-    <button data-act="editcur" aria-label="Edit this question" title="Edit this question">${ic('plus')}</button>
+    ${isAdmin ? `<button data-act="editcur" aria-label="Edit this question" title="Edit this question">${ic('plus')}</button>` : ''}
     <button data-act="notefocus" aria-label="Note" title="Note">${ic('note')}</button>
     <button class="${state.marks[q.id] ? 'on' : ''}" data-act="mark" aria-label="Bookmark" aria-pressed="${!!state.marks[q.id]}" title="Bookmark">${ic('mark')}</button>
     <button data-act="share" aria-label="Share this question" title="Share this question">${ic('share')}</button>
@@ -1455,7 +1455,7 @@ document.addEventListener('click', async e => {
     case 'mark': { const q = cur(); state.marks[q.id] = !state.marks[q.id]; if (!state.marks[q.id]) delete state.marks[q.id]; saveData(); render(); break; }
     case 'hint': { const q = cur(); if (!q.hint) toast('This question has no hint.'); else { sess.hint[q.id] = !sess.hint[q.id]; render(); } break; }
     case 'notefocus': { const n = $('#note'); if (n) { n.scrollIntoView({ block: 'center' }); n.focus(); } break; }
-    case 'editcur': { const q = cur(); const keep = sess; editing = JSON.parse(JSON.stringify(q)); sess = null; clearInterval(timerId); view = 'manage'; manageTab = 'questions'; if (manageExam === 'all') manageExam = q.exam; toast('Session closed so you can edit.'); render(); break; }
+    case 'editcur': { if (!isAdmin) break; const q = cur(); const keep = sess; editing = JSON.parse(JSON.stringify(q)); sess = null; clearInterval(timerId); view = 'manage'; manageTab = 'questions'; if (manageExam === 'all') manageExam = q.exam; toast('Session closed so you can edit.'); render(); break; }
     case 'reviewq': sess.done = false; sess.review = true; sess.idx = i; sess.visited[sess.ids[i]] = 1; view = 'session'; clearInterval(timerId); timerId = setInterval(tick, 1000); render(); window.scrollTo(0, 0); break;
     case 'leave': sess = null; view = 'home'; render(); break;
     case 'mtab': editing = null; manageTab = t.dataset.k; render(); break;
