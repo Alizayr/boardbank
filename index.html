@@ -174,6 +174,18 @@ h2.sec{font:600 calc(20px * var(--fz)) var(--sans);margin:32px 0 0}
 .stats b{display:block;font-size:calc(13px * var(--fz));font-weight:500;color:var(--mute)}
 .stats span{font:600 calc(20px * var(--fz)) var(--sans)}
 .stats i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.subpanel{margin:18px 0;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--card)}
+.subhead{margin-bottom:10px;font-size:calc(15px * var(--fz))}
+.subsearch{width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid var(--line-2);border-radius:10px;background:var(--soft);color:var(--ink);font:inherit;margin-bottom:12px}
+.subtools{gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.sublist{max-height:380px;overflow:auto;display:flex;flex-direction:column}
+.subrow{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;text-align:left;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:12px 4px;color:var(--ink);font:inherit;cursor:pointer}
+.subrow:first-child{border-top:0}
+.subrow:hover{background:var(--soft)}
+.subbox{width:20px;height:20px;border:2px solid var(--line-2);border-radius:6px;display:grid;place-items:center;font-size:13px;line-height:1;color:var(--on-acc)}
+.subrow.on .subbox{background:var(--acc);border-color:var(--acc)}
+.subname{font-weight:500}
+.submeta{color:var(--mute);font-size:calc(13px * var(--fz));white-space:nowrap}
 .formula{margin:18px 0;color:var(--mute);font-size:calc(14px * var(--fz))}
 .formula code{display:block;margin-top:12px;background:var(--hover);border-radius:10px;padding:12px 16px;font:400 calc(13px * var(--fz))/1.6 var(--sans)}
 
@@ -882,6 +894,32 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const dayKey = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
 const startOfDay = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
 const qTags = q => (q.tags && q.tags.length) ? q.tags : ['Untagged'];
+/* two-level topics: a tag written "System > Topic" shows as one System card; its Topics are picked inside the card */
+const SUBSEP = ' > ';
+const sysOfTag = t => { const s = String(t), i = s.indexOf(SUBSEP); return i < 0 ? s : s.slice(0, i).trim(); };
+const subOfTag = t => { const s = String(t), i = s.indexOf(SUBSEP); return i < 0 ? null : s.slice(i + SUBSEP.length).trim(); };
+const inSys = (q, sys) => qTags(q).some(t => sysOfTag(t) === sys);
+const inSubs = (q, sys, subs) => !sys || !subs || !subs.length || qTags(q).some(t => sysOfTag(t) === sys && subs.includes(subOfTag(t)));
+let subSel = {}, subQ = '';
+const subKey = (ex, sys) => ex + '|' + sys;
+function subMap(qs, sys) { const m = {}; qs.forEach(q => qTags(q).forEach(t => { if (sysOfTag(t) !== sys) return; const s = subOfTag(t); if (!s) return; (m[s] = m[s] || new Set()).add(q); })); return m; }
+const subNames = (exId, sys) => Object.keys(subMap(examQs(exId), sys)).sort((a, b) => a.localeCompare(b));
+function subPanel(exId, sys, qs) {
+  const m = subMap(qs, sys), names = Object.keys(m).sort((a, b) => a.localeCompare(b));
+  if (!names.length) return '';
+  const sel = subSel[subKey(exId, sys)] || [], ql = subQ.trim().toLowerCase();
+  const rows = names.map(n => { const arr = [...m[n]], un = arr.filter(q => !(state.results[q.id] && state.results[q.id].attempts > 0)).length, on = sel.includes(n), hide = ql && !n.toLowerCase().includes(ql);
+    return `<button class="subrow ${on ? 'on' : ''}" ${hide ? 'style="display:none"' : ''} data-act="subtoggle" data-t="${esc(sys)}" data-s="${esc(n)}" role="checkbox" aria-checked="${on}"><span class="subbox">${on ? '✓' : ''}</span><span class="subname">${esc(n)}</span><span class="submeta">${arr.length} Qs, ${un} unused</span></button>`; }).join('');
+  return `<div class="subpanel"><div class="subhead"><b>Topics (${names.length})</b></div>
+    <input class="subsearch" id="sub-search" type="search" placeholder="Search topics..." value="${esc(subQ)}" aria-label="Search topics" autocomplete="off">
+    <div class="row subtools"><button class="ghost" data-act="suball" data-t="${esc(sys)}">Select all</button><button class="ghost" data-act="subclear" data-t="${esc(sys)}">Clear</button><span class="muted subcount">${sel.length ? sel.length + ' selected' : 'No topics checked = all topics'}</span></div>
+    <div class="sublist">${rows}</div></div>`;
+}
+function syncSubUi(sys) {
+  const sel = subSel[subKey(curExam, sys)] || [];
+  document.querySelectorAll('.subrow').forEach(b => { if (b.dataset.t !== sys) return; const on = sel.includes(b.dataset.s); b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.querySelector('.subbox').textContent = on ? '✓' : ''; });
+  document.querySelectorAll('.subcount').forEach(c => { if (c.closest('.subpanel') && c.closest('.subpanel').querySelector('.subrow[data-t="' + CSS.escape(sys) + '"]')) c.textContent = sel.length ? sel.length + ' selected' : 'No topics checked = all topics'; });
+}
 function fmtIv(days) {
   if (days < 1) return Math.round(days * 1440) + ' min';
   if (days < 30) return days === 1 ? '1 day' : days + ' days';
@@ -916,8 +954,8 @@ function applyRating(c, rating) {
   n.interval = iv; n.reps = c.reps + 1; n.due = now + iv * DAY; n.last = now; return n;
 }
 const isDue = id => { const c = state.cards[id]; return !!(c && c.due != null && c.due <= Date.now()); };
-function duePool(examId, topic) {
-  return state.bank.filter(q => (!examId || q.exam === examId) && (!topic || qTags(q).includes(topic)) && isDue(q.id))
+function duePool(examId, topic, subs) {
+  return state.bank.filter(q => (!examId || q.exam === examId) && (!topic || (inSys(q, topic) && inSubs(q, topic, subs))) && isDue(q.id))
     .sort((a, b) => state.cards[a.id].due - state.cards[b.id].due);
 }
 
@@ -933,7 +971,7 @@ function statsOf(qs) {
   return { total, att, cor, inc, skip, due, score: att ? Math.round(100 * perf * Math.pow(prog, 0.25)) : 0 };
 }
 const examQs = id => state.bank.filter(q => q.exam === id);
-function topicsOf(id) { const m = {}; examQs(id).forEach(q => qTags(q).forEach(t => (m[t] = m[t] || []).push(q))); return m; }
+function topicsOf(id) { const m = {}; examQs(id).forEach(q => { const seen = new Set(); qTags(q).forEach(t => { const s = sysOfTag(t); if (seen.has(s)) return; seen.add(s); (m[s] = m[s] || []).push(q); }); }); return m; }
 
 /* ================= render root ================= */
 function render() {
@@ -1023,6 +1061,7 @@ function renderExam() {
           <div><b>Due</b><span><i style="background:var(--amber)"></i>${s.due}</span></div></div>
           <div class="formula">Progress scores go beyond percentages: they factor in how much of the topic you have attempted, so a perfect score on two questions does not count as mastery.
             <code>Progress score = performance (correct / attempted) × progress (attempted / total) ^ 0.25</code></div>
+          ${subPanel(e.id, t, topics[t])}
           <div class="row"><button class="btn" data-act="study" data-t="${esc(t)}">Study topic</button>
           <button class="ghost" data-act="revtopic" data-t="${esc(t)}" ${s.due ? '' : 'disabled'}>Review due (${s.due})</button></div></div>` : ''}
       </article>`; }).join('')}`;
@@ -1033,7 +1072,8 @@ function setupPool() {
   const s = setup;
   return state.bank.filter(q => {
     if (q.exam !== s.examId) return false;
-    if (s.topic && !qTags(q).includes(s.topic)) return false;
+    if (s.topic && !inSys(q, s.topic)) return false;
+    if (!inSubs(q, s.topic, s.subs)) return false;
     const r = state.results[q.id];
     if (!s.seen && r && r.attempts > 0) return false;
     if (s.filter === 'incorrect' && !(r && r.last === false)) return false;
@@ -1042,14 +1082,14 @@ function setupPool() {
   });
 }
 function openSetup(topic) {
-  const base = { examId: curExam, topic: topic || null, count: '', exam: false, h: 0, m: 0, seen: false, filter: 'all' };
+  const base = { examId: curExam, topic: topic || null, subs: topic ? [...(subSel[subKey(curExam, topic)] || [])] : [], count: '', exam: false, h: 0, m: 0, seen: false, filter: 'all' };
   setup = base;
   if (!setupPool().length) setup.seen = true;
   view = 'setup'; render(); window.scrollTo(0, 0);
 }
 function renderSetup() {
   const e = examById(setup.examId), n = setupPool().length;
-  return `<div class="crumb"><a data-act="backex" class="sq" style="display:grid" aria-label="Back">${ic('left')}</a><a data-act="home">${esc(e.name)}</a><span class="sep">/</span><a data-act="backex">BoardBank</a><span class="sep">/</span><b>${esc(setup.topic || 'All topics')}</b></div>
+  return `<div class="crumb"><a data-act="backex" class="sq" style="display:grid" aria-label="Back">${ic('left')}</a><a data-act="home">${esc(e.name)}</a><span class="sep">/</span><a data-act="backex">BoardBank</a><span class="sep">/</span><b>${esc(setup.topic || 'All topics')}${setup.subs && setup.subs.length ? ' (' + setup.subs.length + ' topic' + (setup.subs.length === 1 ? '' : 's') + ')' : ''}</b></div>
   <section class="card setup" style="padding:0">
     <div class="head"><h2>Advanced session settings</h2><p class="muted">Leave blank if you would like a standard session</p></div>
     <div class="sec"><h3>Question count</h3><p class="muted">Select how many questions you want in your session</p>
@@ -1074,7 +1114,7 @@ function startSession() {
   beginSession(ids, setup.exam ? 'exam' : 'tutor', 'study', ((+setup.h || 0) * 60 + (+setup.m || 0)) * 60000, setup.examId);
 }
 function startReview(topic) {
-  const ids = duePool(curExam && view === 'exam' ? curExam : null, topic || null).slice(0, 50).map(q => q.id);
+  const ids = duePool(curExam && view === 'exam' ? curExam : null, topic || null, topic ? (subSel[subKey(curExam, topic)] || []) : []).slice(0, 50).map(q => q.id);
   if (!ids.length) return toast('Nothing is due right now.');
   beginSession(ids, 'tutor', 'review', 0, curExam);
 }
@@ -1436,6 +1476,9 @@ document.addEventListener('click', async e => {
     case 'sort': sortBy = sortBy === 'name' ? 'score' : sortBy === 'score' ? 'due' : 'name'; render(); break;
     case 'toggletopic': { const k = curExam + '|' + t.dataset.t; openTopics[k] = !openTopics[k]; render(); break; }
     case 'study': openSetup(t.dataset.t); break;
+    case 'subtoggle': { const k = subKey(curExam, t.dataset.t), s = t.dataset.s, arr = subSel[k] || (subSel[k] = []), j = arr.indexOf(s); if (j < 0) arr.push(s); else arr.splice(j, 1); syncSubUi(t.dataset.t); break; }
+    case 'suball': subSel[subKey(curExam, t.dataset.t)] = subNames(curExam, t.dataset.t); syncSubUi(t.dataset.t); break;
+    case 'subclear': delete subSel[subKey(curExam, t.dataset.t)]; syncSubUi(t.dataset.t); break;
     case 'revtopic': startReview(t.dataset.t); break;
     case 'backex': view = 'exam'; render(); break;
     case 'swexam': setup.exam = !setup.exam; render(); break;
@@ -1485,6 +1528,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('input', e => {
   const id = e.target.id;
   if (id === 'bq') { bankQuery = e.target.value; bankLimit = 50; clearTimeout(bankTimer); bankTimer = setTimeout(bankSearch, 350); }
+  else if (id === 'sub-search') { subQ = e.target.value; const ql = subQ.trim().toLowerCase(); document.querySelectorAll('.subrow').forEach(b => { b.style.display = !ql || b.dataset.s.toLowerCase().includes(ql) ? '' : 'none'; }); }
   else if (id === 's-count') setup.count = e.target.value;
   else if (id === 's-h') setup.h = e.target.value;
   else if (id === 's-m') setup.m = e.target.value;
